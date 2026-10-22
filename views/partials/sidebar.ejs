@@ -1,0 +1,34 @@
+<%
+  const enlaces = usuario.rol === 'admin'
+    ? [
+        { href: '/admin/dashboard', texto: 'Dashboard', icono: 'casa' },
+        { href: '/admin/usuarios', texto: 'Usuarios', icono: 'personas' },
+      ]
+    : [
+        { href: '/bandeja', texto: 'Mi bandeja', icono: 'bandeja' },
+      ];
+  const actual = rutaActual;
+%>
+<aside class="sidebar" id="sidebar">
+  <div>
+    <div class="sidebar__perfil">
+      <p class="sidebar__nombre"><%= usuario.nombre %></p>
+      <p class="sidebar__rol"><%= nombreRol(usuario.rol) %></p>
+    </div>
+    <nav class="sidebar__nav">
+      <% enlaces.forEach(e => { %>
+        <a href="<%= e.href %>" class="sidebar__link <%= actual.startsWith(e.href) ? 'is-active' : '' %>">
+          <%- include('iconos', { icono: e.icono }) %>
+          <span><%= e.texto %></span>
+        </a>
+      <% }) %>
+    </nav>
+  </div>
+  <form action="/logout" method="POST" class="sidebar__salir">
+    <button type="submit" class="sidebar__link">
+      <%- include('iconos', { icono: 'salir' }) %>
+      <span>Cerrar sesión</span>
+    </button>
+  </form>
+</aside>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>

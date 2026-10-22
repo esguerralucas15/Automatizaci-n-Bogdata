@@ -1,0 +1,31 @@
+{
+  "name": "bitacora-pagos-bogdata",
+  "version": "0.1.0",
+  "description": "Bitácora de auditoría del trámite de aprobación de registros de pago en BOGDATA",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "node --test",
+    "cargar-usuarios": "node scripts/cargarUsuarios.js",
+    "datos-prueba": "node scripts/cargarUsuarios.js scripts/datos-prueba/usuarios-prueba.xlsx",
+    "verificar-bitacora": "node scripts/verificarBitacora.js"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "connect-mongo": "^5.1.0",
+    "dotenv": "^16.4.5",
+    "ejs": "^7.0.1",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "mongoose": "^8.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

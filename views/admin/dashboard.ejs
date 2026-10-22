@@ -1,0 +1,32 @@
+<%- include('../partials/layout-inicio') %>
+<div class="encabezado">
+  <div>
+    <h2 class="encabezado__titulo">Bienvenid@ <%= usuario.nombre %></h2>
+    <p class="encabezado__info">Consolidado del trámite de aprobación de registros de pago en BOGDATA</p>
+  </div>
+</div>
+
+<div class="admin-stats">
+  <div class="card stat">
+    <p class="card__titulo">En curso</p>
+    <p class="stat__valor"><%= enCurso %> <span><%= enCurso === 1 ? 'Trámite' : 'Trámites' %></span></p>
+  </div>
+  <div class="card stat">
+    <p class="card__titulo">Detenidos más de <%= horasDetenido %> h</p>
+    <p class="stat__valor"><%= detenidos %> <span><%= detenidos === 1 ? 'Trámite' : 'Trámites' %></span></p>
+  </div>
+  <div class="card stat">
+    <p class="card__titulo">Liberados este mes</p>
+    <p class="stat__valor"><%= liberadosMes %> <span><%= liberadosMes === 1 ? 'Trámite' : 'Trámites' %></span></p>
+  </div>
+  <div class="card stat">
+    <p class="card__titulo">Usuarios activos</p>
+    <p class="stat__valor"><%= usuariosActivos %> <span><%= usuariosActivos === 1 ? 'Persona' : 'Personas' %></span></p>
+  </div>
+</div>
+
+<div class="card tabla-card">
+  <p class="card__titulo">Trámites</p>
+  <p class="vacio">Aquí aparecerá el consolidado de trámites con su línea de tiempo cuando los revisores empiecen a registrarlos.</p>
+</div>
+<%- include('../partials/layout-fin') %>

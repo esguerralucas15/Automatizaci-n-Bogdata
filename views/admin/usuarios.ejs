@@ -1,0 +1,66 @@
+<%- include('../partials/layout-inicio') %>
+<div class="encabezado">
+  <div>
+    <h2 class="encabezado__titulo">Usuarios</h2>
+    <p class="encabezado__info">Personas que participan en el trámite y su rol</p>
+  </div>
+</div>
+
+<div class="card tabla-card">
+  <p class="card__titulo">Personas registradas</p>
+  <form class="filtro" method="GET" action="/admin/usuarios">
+    <label for="rol" class="filtro__label">Rol</label>
+    <div class="select select--pequeno">
+      <select id="rol" name="rol" onchange="this.form.submit()">
+        <option value="">Todos</option>
+        <% roles.forEach(r => { %>
+          <option value="<%= r %>" <%= filtros.rol === r ? 'selected' : '' %>><%= nombreRol(r) %></option>
+        <% }) %>
+      </select>
+    </div>
+    <noscript><button class="btn btn--primario btn--mediano">Filtrar</button></noscript>
+  </form>
+
+  <% if (lista.length) { %>
+    <div class="tabla-scroll">
+      <table class="tabla">
+        <thead>
+          <tr><th>Nombre</th><th>Correo</th><th>Cargo</th><th>Rol</th><th>Subsecretaría</th><th>Estado</th></tr>
+        </thead>
+        <tbody>
+          <% lista.forEach(u => { %>
+            <tr class="<%= u.activo ? '' : 'is-inactivo' %>">
+              <td><%= u.nombre %></td>
+              <td><%= u._id %></td>
+              <td><%= u.cargo || '—' %></td>
+              <td><span class="rol rol--<%= u.rol %>"><%= nombreRol(u.rol) %></span></td>
+              <td><%= u.subsecretaria || '—' %></td>
+              <td><span class="estado <%= u.activo ? 'estado--finalizado' : 'estado--pendiente' %>"><%= u.activo ? 'Activo' : 'Inactivo' %></span></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <p class="vacio">No hay usuarios con este filtro. Cárgalos con <code>npm run cargar-usuarios</code>.</p>
+  <% } %>
+</div>
+
+<div class="card tabla-card historial">
+  <p class="card__titulo">Reciben copia (sin cuenta)</p>
+  <% if (copias.length) { %>
+    <div class="tabla-scroll">
+      <table class="tabla">
+        <thead><tr><th>Nombre o área</th><th>Correo</th><th>Recibe</th></tr></thead>
+        <tbody>
+          <% copias.forEach(c => { %>
+            <tr><td><%= c.nombre || '—' %></td><td><%= c.correo %></td><td><%= c.recibe %></td></tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <p class="vacio">No hay destinatarios de copia configurados.</p>
+  <% } %>
+</div>
+<%- include('../partials/layout-fin') %>

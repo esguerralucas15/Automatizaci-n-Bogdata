@@ -1,0 +1,50 @@
+<%- include('../partials/layout-inicio') %>
+<div class="encabezado">
+  <div>
+    <h2 class="encabezado__titulo">Bienvenid@ <%= usuario.nombre %></h2>
+    <p class="encabezado__info"><%= nombreRol(usuario.rol) %> · Trámites que esperan tu registro</p>
+  </div>
+</div>
+
+<div class="admin-stats admin-stats--tres">
+  <div class="card stat">
+    <p class="card__titulo">Pendientes de mi registro</p>
+    <p class="stat__valor"><%= pendientes.length %> <span><%= pendientes.length === 1 ? 'Trámite' : 'Trámites' %></span></p>
+  </div>
+  <div class="card stat">
+    <p class="card__titulo">En curso</p>
+    <p class="stat__valor"><%= enCurso %> <span><%= enCurso === 1 ? 'Trámite' : 'Trámites' %></span></p>
+  </div>
+  <div class="card stat">
+    <p class="card__titulo">Mayor tiempo en espera</p>
+    <p class="stat__valor"><%= pendientes.length ? esperaDe(Math.max(...pendientes.map(t => t.horasEspera))) : '—' %></p>
+  </div>
+</div>
+
+<div class="card tabla-card">
+  <p class="card__titulo">Mi bandeja</p>
+  <% if (pendientes.length) { %>
+    <div class="tabla-scroll">
+      <table class="tabla">
+        <thead>
+          <tr><th>Trámite</th><th>WF</th><th>Lote</th><th>Valor</th><th>Estado</th><th>En espera</th></tr>
+        </thead>
+        <tbody>
+          <% pendientes.forEach(t => { %>
+            <tr>
+              <td><%= t._id %></td>
+              <td><%= t.wfActual %></td>
+              <td><%= t.lote || '—' %></td>
+              <td><%= dinero(t.valorTotal) %></td>
+              <td><span class="estado estado--<%= t.estado.toLowerCase() %>"><%= etiquetaEstado(t.estado) %></span></td>
+              <td><%= esperaDe(t.horasEspera) %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <p class="vacio">No tienes trámites pendientes. Cuando alguien registre un paso que te corresponda, te llegará un correo y aparecerá aquí.</p>
+  <% } %>
+</div>
+<%- include('../partials/layout-fin') %>
