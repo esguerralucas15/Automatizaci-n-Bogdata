@@ -1,0 +1,43 @@
+<%
+  // Parámetros: nombre, def (de flujo.js), valor, error, opciones (para selects de personas), prefijo
+  const id = (typeof prefijo !== 'undefined' ? prefijo : '') + nombre;
+  const v = valor ?? '';
+%>
+<div class="campo <%= error ? 'is-error' : '' %> <%= ['lista', 'texto'].includes(def.tipo) && (nombre === 'motivo' || nombre === 'descripcion' || def.tipo === 'lista') ? 'campo--ancho' : '' %>">
+  <% if (['booleano', 'opcion'].includes(def.tipo)) { %>
+    <fieldset class="campo__grupo">
+      <legend class="campo__label"><%= def.etiqueta %></legend>
+      <% const ops = def.tipo === 'booleano' ? { si: 'Sí', no: 'No' } : def.opciones; %>
+      <div class="opciones">
+        <% Object.entries(ops).forEach(([valorOp, texto]) => { %>
+          <label class="opcion">
+            <input type="radio" name="<%= nombre %>" value="<%= valorOp %>" <%= String(v) === valorOp ? 'checked' : '' %> <%= def.requerido ? 'required' : '' %>>
+            <span><%= texto %></span>
+          </label>
+        <% }) %>
+      </div>
+    </fieldset>
+  <% } else { %>
+    <label class="campo__label" for="<%= id %>"><%= def.etiqueta %><% if (!def.requerido) { %> <span class="campo__opcional">(opcional)</span><% } %></label>
+    <% if (def.tipo === 'correo') { %>
+      <div class="select select--campo">
+        <select id="<%= id %>" name="<%= nombre %>" <%= def.requerido ? 'required' : '' %>>
+          <option value="">Elige una persona</option>
+          <% (opciones || []).forEach(p => { %>
+            <option value="<%= p._id %>" <%= v === p._id ? 'selected' : '' %>><%= p.nombre %><%= p.subsecretaria ? ' – ' + p.subsecretaria : '' %></option>
+          <% }) %>
+        </select>
+      </div>
+    <% } else if (def.tipo === 'lista') { %>
+      <textarea class="campo__input" id="<%= id %>" name="<%= nombre %>" rows="3" placeholder="Uno por línea o separados por coma" <%= def.requerido ? 'required' : '' %>><%= v %></textarea>
+    <% } else if (nombre === 'motivo' || nombre === 'descripcion') { %>
+      <textarea class="campo__input" id="<%= id %>" name="<%= nombre %>" rows="3" maxlength="1000" <%= def.requerido ? 'required' : '' %>><%= v %></textarea>
+    <% } else { %>
+      <input class="campo__input" id="<%= id %>" name="<%= nombre %>" value="<%= v %>" autocomplete="off"
+        <% if (['numeroWF', 'numeroLote', 'entero'].includes(def.tipo)) { %>inputmode="numeric"<% } %>
+        <% if (def.tipo === 'dinero') { %>inputmode="decimal" placeholder="Ej. 1.250.000"<% } %>
+        <%= def.requerido ? 'required' : '' %>>
+    <% } %>
+  <% } %>
+  <% if (error) { %><p class="campo__error"><%= error %></p><% } %>
+</div>

@@ -7,13 +7,13 @@
 // - Se puede correr varias veces: crea los nuevos y actualiza los existentes (no duplica).
 // - No borra a nadie: quien ya no está en el Excel se reporta para desactivarlo desde la app.
 // - Cada alta o cambio queda en la bitácora como hecho por "Carga inicial (script)".
-import ExcelJS from "exceljs";
 import mongoose from "mongoose";
 import { validarConfiguracion, CONFIG_ID } from "../config/config.js";
 import { conectarDB, desconectarDB } from "../config/db.js";
 import Usuario from "../models/Usuario.js";
 import Configuracion from "../models/Configuracion.js";
 import { validarUsuarios, validarCopias } from "../services/usuariosExcel.js";
+import { abrirLibro, leerHoja } from "../services/leerExcel.js";
 import { insertarEvento, SISTEMA } from "../services/bitacora.js";
 
 const ruta = process.argv[2];
@@ -22,36 +22,12 @@ if (!ruta) {
   process.exit(1);
 }
 
-// Excel guarda algunos valores como objetos (correos con hipervínculo, texto con formato, fórmulas)
-function valorCelda(v) {
-  if (v === null || v === undefined) return "";
-  if (typeof v === "object") {
-    if (v.text !== undefined) return typeof v.text === "object" ? valorCelda(v.text) : v.text;
-    if (Array.isArray(v.richText)) return v.richText.map((t) => t.text).join("");
-    if (v.result !== undefined) return v.result;
-    if (v instanceof Date) return v.toISOString().slice(0, 10);
-  }
-  return v;
-}
-
-function leerHoja(libro, nombre) {
-  const hoja = libro.getWorksheet(nombre);
-  if (!hoja) return { encabezados: [], filas: [] };
-  const filas = [];
-  hoja.eachRow({ includeEmpty: true }, (fila, n) => {
-    filas[n - 1] = fila.values.slice(1).map(valorCelda); // values[0] no se usa en ExcelJS
-  });
-  const [encabezados = [], ...resto] = filas;
-  return { encabezados: encabezados.map(String), filas: resto.map((f) => f ?? []) };
-}
-
 const CAMPOS = ["nombre", "cargo", "rol", "subsecretaria", "observaciones", "activo"];
 
 async function main() {
   validarConfiguracion();
 
-  const libro = new ExcelJS.Workbook();
-  await libro.xlsx.readFile(ruta);
+  const libro = await abrirLibro(ruta);
 
   const u = validarUsuarios(leerHoja(libro, "Usuarios"));
   const c = validarCopias(leerHoja(libro, "Solo copia"));

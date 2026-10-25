@@ -1,0 +1,26 @@
+<%
+  // Parámetros: a (acción con codigo, etiqueta, campos), url, errores, valores, opciones, secundaria
+  const tieneMotivo = 'motivo' in a.campos;
+  const pre = a.codigo.toLowerCase() + '-';
+%>
+<form class="formulario" action="<%= url %>" method="POST" novalidate>
+  <input type="hidden" name="accion" value="<%= a.codigo %>">
+  <div class="formulario__campos">
+    <% Object.entries(a.campos).forEach(([nombre, def]) => { %>
+      <%- include('campo', { nombre, def, valor: valores[nombre], error: errores[nombre], opciones: opciones[nombre], prefijo: pre }) %>
+    <% }) %>
+    <% if (!tieneMotivo) { %>
+      <div class="campo campo--ancho">
+        <label class="campo__label" for="<%= pre %>observacion">Observación <span class="campo__opcional">(opcional)</span></label>
+        <textarea class="campo__input" id="<%= pre %>observacion" name="observacion" rows="2" maxlength="1000"><%= valores.observacion || '' %></textarea>
+      </div>
+    <% } %>
+    <div class="campo <%= errores.horaDeclaradaBogdata ? 'is-error' : '' %>">
+      <label class="campo__label" for="<%= pre %>hora">¿A qué hora lo hiciste en BOGDATA?</label>
+      <input class="campo__input" type="datetime-local" id="<%= pre %>hora" name="horaDeclarada" value="<%= valores.horaDeclarada || '' %>">
+      <p class="campo__ayuda">La hora de registro la pone el sistema. Este dato es la hora real en BOGDATA, si fue antes.</p>
+      <% if (errores.horaDeclaradaBogdata) { %><p class="campo__error"><%= errores.horaDeclaradaBogdata %></p><% } %>
+    </div>
+  </div>
+  <button type="submit" class="btn btn--mediano <%= secundaria ? 'btn--secundario' : 'btn--primario' %>"><%= a.etiqueta %></button>
+</form>

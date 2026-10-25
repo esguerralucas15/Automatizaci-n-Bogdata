@@ -2,10 +2,13 @@
   const enlaces = usuario.rol === 'admin'
     ? [
         { href: '/admin/dashboard', texto: 'Dashboard', icono: 'casa' },
+        { href: '/tramites', texto: 'Trámites', icono: 'lista', exacta: true },
         { href: '/admin/usuarios', texto: 'Usuarios', icono: 'personas' },
       ]
     : [
         { href: '/bandeja', texto: 'Mi bandeja', icono: 'bandeja' },
+        ...(usuario.rol === 'revisor' ? [{ href: '/tramites/nuevo', texto: 'Nuevo trámite', icono: 'mas' }] : []),
+        { href: '/tramites', texto: 'Trámites', icono: 'lista', exacta: true },
       ];
   const actual = rutaActual;
 %>
@@ -17,7 +20,7 @@
     </div>
     <nav class="sidebar__nav">
       <% enlaces.forEach(e => { %>
-        <a href="<%= e.href %>" class="sidebar__link <%= actual.startsWith(e.href) ? 'is-active' : '' %>">
+        <a href="<%= e.href %>" class="sidebar__link <%= (e.exacta ? actual === e.href || (actual.startsWith('/tramites/') && actual !== '/tramites/nuevo') : actual.startsWith(e.href)) ? 'is-active' : '' %>">
           <%- include('iconos', { icono: e.icono }) %>
           <span><%= e.texto %></span>
         </a>

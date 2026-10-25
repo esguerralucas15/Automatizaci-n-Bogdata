@@ -15,6 +15,8 @@
   const modal = document.getElementById("modalExito");
   if (modal) {
     const cerrar = () => modal.classList.add("is-cerrado");
+    // Quita ?registrado=... para que el aviso no vuelva a salir al recargar
+    if (location.search.includes("registrado=")) history.replaceState(null, "", location.pathname);
     modal.querySelector("[data-cerrar-modal]").addEventListener("click", cerrar);
     modal.addEventListener("click", (e) => { if (e.target === modal) cerrar(); });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") cerrar(); });

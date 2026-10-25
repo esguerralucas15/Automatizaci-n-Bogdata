@@ -3,6 +3,7 @@ import Tramite from "../models/Tramite.js";
 import Configuracion from "../models/Configuracion.js";
 import { ROLES } from "../models/roles.js";
 import { partesBogota, aFechaHora, ahora } from "../services/tiempo.js";
+import { conEspera, esperaDe } from "./tramiteController.js";
 
 export async function dashboard(req, res) {
   const conf = await Configuracion.actual();
@@ -17,8 +18,13 @@ export async function dashboard(req, res) {
     Tramite.countDocuments({ estado: "LIBERADO", ultimoEventoEn: { $gte: inicioMes } }),
   ]);
 
+  // En curso: los que más llevan esperando primero
+  const activos = await Tramite.find({ estado: { $nin: ["LIBERADO", "ANULADO"] } }).sort({ ultimoEventoEn: 1 }).limit(50).lean();
+
   res.render("admin/dashboard", {
     titulo: "Dashboard",
+    tramites: await conEspera(activos),
+    esperaDe,
     usuariosActivos, enCurso, detenidos, liberadosMes,
     horasDetenido: conf.horasDetenido,
   });

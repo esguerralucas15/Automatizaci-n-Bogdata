@@ -6,7 +6,16 @@ import { PORT, EN_PRODUCCION, validarConfiguracion } from "./config/config.js";
 
 validarConfiguracion();
 
+// Primero se conecta a MongoDB y después se carga la sesión: connect-mongo toma el
+// cliente de la conexión de Mongoose, que solo existe después de conectar.
 const { conectarDB } = await import("./config/db.js");
+try {
+  await conectarDB();
+} catch (err) {
+  console.error("No se pudo conectar a MongoDB:", err.message);
+  process.exit(1);
+}
+
 const { default: sesion } = await import("./config/session.js");
 const { default: appRouter } = await import("./routes/router.js");
 const { variablesVista } = await import("./middlewares/auth.js");
@@ -36,18 +45,12 @@ app.use("/", appRouter);
 app.use(noEncontrado);
 app.use(manejadorErrores);
 
-try {
-  await conectarDB();
-  app.listen(PORT, (err) => {
-    if (err) {
-      console.error(
-        `No se pudo iniciar el servidor en el puerto ${PORT}: ${err.code === "EADDRINUSE" ? "el puerto ya está en uso (¿hay otro servidor abierto?)" : err.message}`
-      );
-      process.exit(1);
-    }
-    console.log(`Server running 🚀 at http://localhost:${PORT}`);
-  });
-} catch (err) {
-  console.error("No se pudo conectar a MongoDB:", err.message);
-  process.exit(1);
-}
+app.listen(PORT, (err) => {
+  if (err) {
+    console.error(
+      `No se pudo iniciar el servidor en el puerto ${PORT}: ${err.code === "EADDRINUSE" ? "el puerto ya está en uso (¿hay otro servidor abierto?)" : err.message}`
+    );
+    process.exit(1);
+  }
+  console.log(`Server running 🚀 at http://localhost:${PORT}`);
+});

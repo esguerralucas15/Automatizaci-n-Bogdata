@@ -1,0 +1,19 @@
+<%- include('../partials/layout-inicio') %>
+<div class="encabezado">
+  <div>
+    <h2 class="encabezado__titulo">Nuevo trámite</h2>
+    <p class="encabezado__info">Registra el cargue que hiciste en BOGDATA. Al guardar se avisa por correo al responsable de presupuesto.</p>
+  </div>
+</div>
+
+<% if (mensaje) { %><div class="alerta" role="alert"><%= mensaje %></div><% } %>
+
+<div class="card card--formulario">
+  <p class="card__titulo">Datos del cargue (paso 1)</p>
+  <%- include('../partials/formAccion', {
+        a: { codigo: 'REGISTRAR_WF', ...accion, etiqueta: 'Registrar trámite' },
+        url: '/tramites', errores, valores, secundaria: false,
+        opciones: { director: directores, ordenador: ordenadores },
+      }) %>
+</div>
+<%- include('../partials/layout-fin') %>

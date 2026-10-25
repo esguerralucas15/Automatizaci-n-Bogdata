@@ -44,10 +44,25 @@ Se puede correr varias veces: no duplica personas.
 | Comando | Qué hace |
 |---|---|
 | `npm run dev` | Servidor con recarga automática |
-| `npm test` | Pruebas (flujo de estados, bitácora, plantilla de usuarios, fechas) |
+| `npm test` | Pruebas (flujo de estados, bitácora, correos, plantilla de usuarios, fechas) |
 | `npm run cargar-usuarios -- <archivo.xlsx>` | Carga o actualiza usuarios desde la plantilla |
 | `npm run datos-prueba` | Carga los usuarios inventados |
 | `npm run verificar-bitacora` | Verifica que nadie haya alterado la bitácora |
+
+## Pantallas
+
+| Ruta | Quién | Qué hace |
+|---|---|---|
+| `/bandeja` | revisor, director, subsecretario | Trámites que esperan mi registro |
+| `/tramites/nuevo` | revisor | Registrar el cargue en BOGDATA (crea el trámite) |
+| `/tramites` | todos | Lista con filtro por estado y búsqueda por trámite, WF, lote o documento |
+| `/tramites/:id` | todos | Avance, datos, paso a registrar (si me corresponde) y línea de tiempo |
+| `/admin/dashboard` | admin | Indicadores y trámites en curso (los más detenidos primero) |
+| `/admin/usuarios` | admin | Personas, roles y destinatarios de copia |
+
+Cada paso se guarda en una transacción: trámite + evento de la bitácora + correo en cola.
+Los correos quedan en la colección `notificaciones` con estado `pendiente`; el envío real
+(despachador) es el siguiente paso del plan.
 
 ## Estructura
 
@@ -57,7 +72,8 @@ controllers/  login, bandeja, administración
 middlewares/  sesión y roles, errores
 models/       Usuario, Tramite, Evento (bitácora), Notificacion, Configuracion, Contador
 routes/
-services/     flujo.js (máquina de estados), bitacora.js, hash.js, usuariosExcel.js, tiempo.js
+services/     flujo.js (máquina de estados), registrarAccion.js, bitacora.js, hash.js,
+              destinatarios.js, correo/plantillas.js, usuariosExcel.js, tiempo.js
 scripts/      cargarUsuarios.js, verificarBitacora.js, datos-prueba/
 views/        EJS con los parciales de Horas-Compensacion
 test/

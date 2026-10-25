@@ -26,7 +26,10 @@
 </div>
 
 <div class="card tabla-card">
-  <p class="card__titulo">Trámites</p>
-  <p class="vacio">Aquí aparecerá el consolidado de trámites con su línea de tiempo cuando los revisores empiecen a registrarlos.</p>
+  <div class="tabla-card__cabeza">
+    <p class="card__titulo">Trámites en curso</p>
+    <a class="tabla__link" href="/tramites">Ver todos los trámites</a>
+  </div>
+  <%- include('../partials/tablaTramites', { tramites, textoVacio: 'No hay trámites en curso. Aparecerán aquí cuando los revisores empiecen a registrarlos.' }) %>
 </div>
 <%- include('../partials/layout-fin') %>

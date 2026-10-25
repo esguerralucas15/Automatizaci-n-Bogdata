@@ -1,6 +1,6 @@
 import Tramite from "../models/Tramite.js";
 import { ESTADOS, esResponsable } from "../services/flujo.js";
-import { ahora } from "../services/tiempo.js";
+import { conEspera, esperaDe } from "./tramiteController.js";
 
 // Estados en los que puede actuar cada rol
 const ESTADOS_POR_ROL = Object.entries(ESTADOS).reduce((acc, [estado, e]) => {
@@ -17,10 +17,7 @@ export async function bandeja(req, res) {
   if (u.rol === "subsecretario") filtro.ordenador = u.correo;
 
   const candidatos = await Tramite.find(filtro).sort({ ultimoEventoEn: 1 }).lean();
-  const instante = ahora().getTime();
-  const pendientes = candidatos
-    .filter((t) => esResponsable(t, u))
-    .map((t) => ({ ...t, horasEspera: (instante - new Date(t.ultimoEventoEn).getTime()) / 3600000 }));
+  const pendientes = await conEspera(candidatos.filter((t) => esResponsable(t, u)));
 
   const enCurso = await Tramite.countDocuments({
     estado: { $nin: ["LIBERADO", "ANULADO"] },
@@ -32,6 +29,6 @@ export async function bandeja(req, res) {
     titulo: "Mi bandeja",
     pendientes,
     enCurso,
-    esperaDe: (h) => (h < 1 ? `${Math.max(1, Math.round(h * 60))} min` : h < 48 ? `${Math.round(h)} h` : `${Math.round(h / 24)} días`),
+    esperaDe,
   });
 }

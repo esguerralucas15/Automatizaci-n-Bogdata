@@ -422,3 +422,122 @@ p { margin: 0; }
 @media (max-width: 640px) {
   .admin-stats, .admin-stats--tres { grid-template-columns: 1fr; grid-template-areas: none; }
 }
+
+/* ---------- Botones adicionales ---------- */
+.btn--secundario { background: var(--blanco); color: var(--rojo); border: 2px solid var(--rojo); }
+.btn--secundario:hover:not(:disabled) { background: #fbeeee; }
+.btn--pequeno { min-width: 0; height: 48px; padding: 0 26px; font-size: 21px; }
+.estado--grande { padding: 8px 20px; font-size: 18px; font-family: var(--fuente-ui); }
+
+/* ---------- Formularios de pasos ---------- */
+.card--formulario { padding-bottom: 30px; }
+.card--accion { border: 2px solid var(--dorado); }
+.formulario { display: flex; flex-direction: column; align-items: flex-start; gap: 22px; margin-top: 16px; }
+.formulario__campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 24px; width: 100%; }
+.campo { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.campo--ancho { grid-column: 1 / -1; }
+.campo__label { font-family: var(--fuente-ui); font-size: 15px; font-weight: 500; color: #111; padding: 0; }
+.campo__opcional { font-weight: 400; color: var(--gris-texto); }
+.campo__input {
+  width: 100%;
+  min-height: 52px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: var(--gris-input);
+  padding: 12px 16px;
+  font-family: var(--fuente-ui);
+  font-size: 16px;
+  color: var(--negro);
+  outline: none;
+  resize: vertical;
+}
+.campo__input:focus { border-color: var(--gris-deshabilitado); }
+.campo.is-error .campo__input, .campo.is-error select { border-color: var(--rojo); }
+.campo__error { font-family: var(--fuente-ui); font-size: 14px; color: var(--rojo); }
+.campo__ayuda { font-family: var(--fuente-ui); font-size: 13px; line-height: 1.4; color: var(--gris-texto); }
+.campo__grupo { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.opciones { display: flex; flex-wrap: wrap; gap: 10px; }
+.opcion { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; background: var(--gris-input); font-family: var(--fuente-ui); font-size: 15px; cursor: pointer; }
+.opcion input { accent-color: var(--rojo); width: 18px; height: 18px; margin: 0; }
+.opcion:has(input:checked) { background: #fbeeee; outline: 2px solid var(--rojo); }
+.select--campo { width: 100%; margin-bottom: 0; }
+.select--campo select { height: 52px; font-family: var(--fuente-ui); font-size: 16px; font-weight: 400; color: var(--negro); border: 2px solid transparent; background: var(--gris-input); border-radius: 16px; padding: 0 56px 0 16px; }
+.select--campo::after { right: 22px; }
+
+.plegable { margin-top: 24px; border-top: 1px solid var(--gris-fondo); padding-top: 18px; width: 100%; }
+.plegable summary { font-family: var(--fuente-ui); font-size: 15px; font-weight: 500; color: var(--rojo); cursor: pointer; }
+
+.buscador { width: min(320px, 100%); min-height: 48px; }
+.filtro .btn--pequeno { height: 48px; }
+.tabla-card__cabeza { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.tabla tr.is-detenido td:first-child { box-shadow: inset 4px 0 0 var(--rojo); }
+.texto-rojo { color: var(--rojo); }
+
+/* ---------- Detalle del trámite ---------- */
+.detalle { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px 28px; align-items: start; }
+.detalle__principal { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.detalle__lateral { position: sticky; top: calc(var(--header-alto) + 20px); }
+
+.datos { display: grid; grid-template-columns: 1fr; gap: 2px; margin: 12px 0 0; font-family: var(--fuente-ui); }
+.datos dt { font-size: 13px; color: var(--gris-texto); margin-top: 12px; }
+.datos dd { margin: 0; font-size: 16px; overflow-wrap: anywhere; }
+
+.espera__texto { margin-top: 10px; font-family: var(--fuente-ui); font-size: 16px; line-height: 1.5; }
+
+/* Avance: 7 pasos del procedimiento */
+.avance { list-style: none; margin: 0 0 24px; padding: 22px 24px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; counter-reset: paso; }
+.avance__paso { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.avance__paso:not(:last-child)::after { content: ""; position: absolute; top: 17px; left: calc(50% + 22px); right: calc(-50% + 22px); height: 3px; border-radius: 3px; background: var(--gris-claro); }
+.avance__paso.is-hecho:not(:last-child)::after { background: var(--rojo); }
+.avance__punto { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--gris-fondo); color: var(--gris-texto); font-weight: 700; font-size: 18px; }
+.avance__paso.is-hecho .avance__punto { background: var(--rojo); color: var(--blanco); }
+.avance__paso.is-actual .avance__punto { background: var(--blanco); color: var(--dorado); box-shadow: inset 0 0 0 3px var(--dorado); }
+.avance__texto { font-family: var(--fuente-ui); font-size: 13px; line-height: 1.3; color: var(--gris-texto); }
+.avance__paso.is-hecho .avance__texto, .avance__paso.is-actual .avance__texto { color: #111; }
+
+/* Línea de tiempo (más reciente arriba) */
+.linea { list-style: none; margin: 18px 0 0; padding: 0 0 0 26px; position: relative; }
+.linea::before { content: ""; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; background: var(--gris-fondo); }
+.linea__evento { position: relative; padding: 0 0 26px; font-family: var(--fuente-ui); }
+.linea__evento::before { content: ""; position: absolute; left: -25px; top: 5px; width: 14px; height: 14px; border-radius: 50%; background: var(--rojo); box-shadow: 0 0 0 4px var(--blanco); }
+.linea__evento--rechazar::before, .linea__evento--anular::before { background: #8f2227; }
+.linea__evento--registrar_liberacion::before { background: #24613a; }
+.linea__cabeza { display: flex; justify-content: space-between; gap: 6px 16px; flex-wrap: wrap; }
+.linea__titulo { font-family: var(--fuente-titulos); font-size: 21px; font-weight: 700; line-height: 1.2; }
+.linea__hora { font-size: 14px; font-weight: 500; color: #111; font-variant-numeric: tabular-nums; }
+.linea__quien { margin-top: 2px; font-size: 14px; color: var(--gris-texto); }
+.linea__nota { margin-top: 6px; font-size: 13px; color: var(--gris-texto); }
+.linea__nota--tarde { color: #8a5a10; }
+.linea__datos { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; margin: 10px 0 0; font-size: 14px; }
+.linea__datos dt { color: var(--gris-texto); }
+.linea__datos dd { margin: 0; overflow-wrap: anywhere; }
+.linea__obs { margin-top: 8px; font-size: 14px; font-style: italic; }
+.linea__correo { margin-top: 8px; font-size: 13px; color: var(--gris-texto); }
+.linea__sello { margin-top: 4px; font-size: 12px; color: var(--gris-deshabilitado); }
+
+.modal__caja--compacta { min-height: 0; width: min(720px, 100%); padding: 48px 24px 48px; }
+.modal__caja--compacta .modal__icono { width: 130px; height: 130px; }
+.modal__caja--compacta .modal__texto { margin-top: 24px; font-size: clamp(34px, 4.5vw, 52px); line-height: 1.2; }
+.modal__detalle { margin-top: 10px; max-width: 560px; text-align: center; font-family: var(--fuente-ui); font-size: 16px; line-height: 1.5; color: var(--gris-texto); }
+.modal__caja--compacta .modal__cerrar { top: 22px; right: 24px; }
+
+@media (max-width: 1180px) {
+  .detalle { grid-template-columns: 1fr; }
+  /* En pantallas angostas: primero el paso a registrar, luego los datos y la línea de tiempo */
+  .detalle__principal { display: contents; }
+  .detalle__principal > * { order: 3; }
+  .detalle__principal > .card--accion, .detalle__principal > .espera { order: 1; }
+  .detalle__lateral { position: static; order: 2; }
+  .avance { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 18px; }
+  .avance__paso:nth-child(4)::after { display: none; }
+}
+@media (max-width: 640px) {
+  .formulario__campos { grid-template-columns: 1fr; }
+  .formulario .btn { height: auto; min-height: 64px; max-width: none; padding: 12px 24px; font-size: 22px; line-height: 1.15; text-align: center; }
+  .avance { grid-template-columns: 1fr; padding: 18px 20px; }
+  .avance__paso { flex-direction: row; text-align: left; }
+  .avance__paso::after { display: none; }
+  .avance__punto { flex: 0 0 30px; width: 30px; height: 30px; font-size: 15px; }
+  .linea__datos { grid-template-columns: 1fr; }
+  .linea__datos dd { margin-bottom: 6px; }
+}

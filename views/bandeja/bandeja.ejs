@@ -4,6 +4,7 @@
     <h2 class="encabezado__titulo">Bienvenid@ <%= usuario.nombre %></h2>
     <p class="encabezado__info"><%= nombreRol(usuario.rol) %> · Trámites que esperan tu registro</p>
   </div>
+  <% if (usuario.rol === 'revisor') { %><a href="/tramites/nuevo" class="btn btn--primario btn--mediano">Nuevo trámite</a><% } %>
 </div>
 
 <div class="admin-stats admin-stats--tres">
@@ -23,28 +24,6 @@
 
 <div class="card tabla-card">
   <p class="card__titulo">Mi bandeja</p>
-  <% if (pendientes.length) { %>
-    <div class="tabla-scroll">
-      <table class="tabla">
-        <thead>
-          <tr><th>Trámite</th><th>WF</th><th>Lote</th><th>Valor</th><th>Estado</th><th>En espera</th></tr>
-        </thead>
-        <tbody>
-          <% pendientes.forEach(t => { %>
-            <tr>
-              <td><%= t._id %></td>
-              <td><%= t.wfActual %></td>
-              <td><%= t.lote || '—' %></td>
-              <td><%= dinero(t.valorTotal) %></td>
-              <td><span class="estado estado--<%= t.estado.toLowerCase() %>"><%= etiquetaEstado(t.estado) %></span></td>
-              <td><%= esperaDe(t.horasEspera) %></td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
-    </div>
-  <% } else { %>
-    <p class="vacio">No tienes trámites pendientes. Cuando alguien registre un paso que te corresponda, te llegará un correo y aparecerá aquí.</p>
-  <% } %>
+  <%- include('../partials/tablaTramites', { tramites: pendientes, textoVacio: 'No tienes trámites pendientes. Cuando alguien registre un paso que te corresponda, te llegará un correo y aparecerá aquí.' }) %>
 </div>
 <%- include('../partials/layout-fin') %>

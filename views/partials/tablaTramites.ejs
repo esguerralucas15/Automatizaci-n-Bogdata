@@ -1,0 +1,28 @@
+<% if (tramites.length) { %>
+  <div class="tabla-scroll">
+    <table class="tabla">
+      <thead>
+        <tr><th>Trámite</th><th>WF</th><th>Lote</th><th>Valor</th><th>Estado</th><th>Espera a</th><th>Último paso</th><th></th></tr>
+      </thead>
+      <tbody>
+        <% tramites.forEach(t => { %>
+          <tr class="<%= t.detenido ? 'is-detenido' : '' %>">
+            <td><%= t._id %></td>
+            <td><%= t.wfActual %></td>
+            <td><%= t.lote || '—' %></td>
+            <td><%= dinero(t.valorTotal) %></td>
+            <td><span class="estado estado--<%= t.estado.toLowerCase() %>"><%= etiquetaEstado(t.estado) %></span></td>
+            <td><%= t.esperaDe || '—' %></td>
+            <td>
+              hace <%= esperaDe(t.horasEspera) %>
+              <% if (t.detenido) { %><span class="estado estado--devuelto">Detenido</span><% } %>
+            </td>
+            <td><a class="tabla__link" href="/tramites/<%= t._id %>">Ver detalle</a></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+<% } else { %>
+  <p class="vacio"><%= typeof textoVacio !== 'undefined' ? textoVacio : 'No hay trámites con estos filtros.' %></p>
+<% } %>

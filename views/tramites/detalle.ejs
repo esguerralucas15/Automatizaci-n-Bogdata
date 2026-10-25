@@ -1,0 +1,130 @@
+<%- include('../partials/layout-inicio') %>
+<%
+  const PASOS = ['Cargue del WF', 'Firma WF · Presupuesto', 'Firma WF · Ordenador', 'Lote', 'Firma lote · Presupuesto', 'Firma lote · Ordenador', 'Liberado'];
+  const hechos = { WF_CARGADO: 1, WF_APROBADO_PRESUPUESTO: 2, WF_APROBADO: 3, LOTE_CREADO: 4, LOTE_FIRMADO_PRESUPUESTO: 5, LOTE_FIRMADO: 6, LIBERADO: 7 }[t.estado];
+  const url = '/tramites/' + t._id + '/acciones';
+  const principales = disponibles.filter(a => !['RECHAZAR', 'ANULAR'].includes(a.codigo));
+  const secundarias = disponibles.filter(a => ['RECHAZAR', 'ANULAR'].includes(a.codigo));
+  const valoresDe = (codigo) => accionConError === codigo ? valores : { horaDeclarada: valores.horaDeclarada };
+  const erroresDe = (codigo) => accionConError === codigo ? errores : {};
+  const minutos = (m) => Math.abs(m) < 60 ? `${Math.abs(m)} min` : `${(Math.round(Math.abs(m) / 6) / 10).toLocaleString('es-CO')} h`;
+%>
+<div class="encabezado">
+  <div>
+    <h2 class="encabezado__titulo"><%= t._id %></h2>
+    <p class="encabezado__info">WF <%= t.wfActual %><% if (t.wfAnteriores.length) { %> (antes <%= t.wfAnteriores.join(', ') %>)<% } %> · Segmento <%= t.segmento %></p>
+  </div>
+  <span class="estado estado--grande estado--<%= t.estado.toLowerCase() %>"><%= etiquetaEstado(t.estado) %></span>
+</div>
+
+<% if (mensaje) { %><div class="alerta" role="alert"><%= mensaje %></div><% } %>
+<% if (ultimoRechazo) { %>
+  <div class="alerta">
+    <strong>Rechazado</strong> por <%= ultimoRechazo.usuario.nombre %> el <%= fechaHoraDe(ultimoRechazo.registradoEn) %>:
+    <%= ultimoRechazo.datos.motivo %>. Debe reiniciarse con un nuevo WF o anularse.
+  </div>
+<% } %>
+
+<% if (hechos) { %>
+  <ol class="avance card" aria-label="Avance del trámite">
+    <% PASOS.forEach((paso, i) => { %>
+      <li class="avance__paso <%= i < hechos ? 'is-hecho' : i === hechos ? 'is-actual' : '' %>">
+        <span class="avance__punto"><%= i + 1 %></span>
+        <span class="avance__texto"><%= paso %></span>
+      </li>
+    <% }) %>
+  </ol>
+<% } %>
+
+<div class="detalle">
+  <div class="detalle__principal">
+    <% if (disponibles.length) { %>
+      <div class="card card--formulario card--accion">
+        <p class="card__titulo">Te corresponde registrar</p>
+        <% principales.forEach(a => { %>
+          <%- include('../partials/formAccion', { a, url, errores: erroresDe(a.codigo), valores: valoresDe(a.codigo), opciones: {}, secundaria: false }) %>
+        <% }) %>
+        <% secundarias.forEach(a => { %>
+          <details class="plegable" <%= accionConError === a.codigo || !principales.length ? 'open' : '' %>>
+            <summary><%= a.etiqueta %></summary>
+            <%- include('../partials/formAccion', { a, url, errores: erroresDe(a.codigo), valores: valoresDe(a.codigo), opciones: {}, secundaria: true }) %>
+          </details>
+        <% }) %>
+      </div>
+    <% } else if (t.esperaDe) { %>
+      <div class="card espera">
+        <p class="card__titulo">En espera</p>
+        <p class="espera__texto"><%= etiquetaEstado(t.estado) %> · espera a <strong><%= t.esperaDe %></strong> desde hace <%= esperaDe(t.horasEspera) %>.</p>
+      </div>
+    <% } %>
+
+    <div class="card">
+      <p class="card__titulo">Línea de tiempo</p>
+      <ol class="linea">
+        <% linea.slice().reverse().forEach(e => { %>
+          <li class="linea__evento linea__evento--<%= e.accion.toLowerCase() %>">
+            <div class="linea__cabeza">
+              <p class="linea__titulo"><%= e.titulo %></p>
+              <p class="linea__hora"><%= fechaHoraDe(e.registradoEn) %></p>
+            </div>
+            <p class="linea__quien"><%= e.usuario.nombre %> · <%= nombreRol(e.usuario.rol) %></p>
+            <% if (e.horaDeclaradaBogdata && Math.abs(e.diferenciaMin) >= 1) { %>
+              <p class="linea__nota <%= e.diferenciaMin >= 120 ? 'linea__nota--tarde' : '' %>">
+                Hecho en BOGDATA: <%= fechaHoraDe(e.horaDeclaradaBogdata) %> (registrado <%= minutos(e.diferenciaMin) %> después)
+              </p>
+            <% } %>
+            <% if (e.detalles.length) { %>
+              <dl class="linea__datos">
+                <% e.detalles.forEach(([k, v]) => { %><dt><%= k %></dt><dd><%= v %></dd><% }) %>
+              </dl>
+            <% } %>
+            <% if (e.observacion) { %><p class="linea__obs">“<%= e.observacion %>”</p><% } %>
+            <% if (e.correo) { %>
+              <p class="linea__correo">
+                Correo a <%= e.correo.para.map(c => nombres[c] || c).join(', ') %>:
+                <% if (e.correo.estado === 'enviado') { %>enviado <%= horaDe(e.correo.enviadoEn) %>
+                <% } else if (e.correo.estado === 'fallido') { %><span class="texto-rojo">no se pudo enviar</span>
+                <% } else { %>en cola<% } %>
+              </p>
+            <% } %>
+            <p class="linea__sello">Evento #<%= e.secuencia %></p>
+          </li>
+        <% }) %>
+      </ol>
+    </div>
+  </div>
+
+  <aside class="detalle__lateral">
+    <div class="card">
+      <p class="card__titulo">Datos del trámite</p>
+      <dl class="datos">
+        <dt>Valor total</dt><dd><%= dinero(t.valorTotal) %></dd>
+        <dt>N.° de registros</dt><dd><%= t.numRegistros %></dd>
+        <dt>Lote</dt><dd><%= t.lote || '—' %></dd>
+        <dt>Documentos contables</dt><dd><%= t.documentosContables.length ? t.documentosContables.join(', ') : '—' %></dd>
+        <% if (t.avisoEmbargos !== null && t.avisoEmbargos !== undefined) { %><dt>Aviso de embargos</dt><dd><%= t.avisoEmbargos ? 'Sí' : 'No' %></dd><% } %>
+        <dt>Revisor</dt><dd><%= nombres[t.revisor] || t.revisor %></dd>
+        <dt>Responsable de presupuesto</dt><dd><%= nombres[t.director] || t.director %></dd>
+        <dt>Ordenador del gasto</dt><dd><%= nombres[t.ordenador] || t.ordenador %></dd>
+        <% if (t.descripcion) { %><dt>Descripción</dt><dd><%= t.descripcion %></dd><% } %>
+      </dl>
+    </div>
+  </aside>
+</div>
+
+<% if (registrado) { %>
+  <div class="modal" id="modalExito" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+    <div class="modal__caja modal__caja--compacta">
+      <button type="button" class="modal__cerrar" data-cerrar-modal aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 4l16 16M20 4 4 20"/></svg>
+      </button>
+      <div class="modal__icono">
+        <svg viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"><path d="M77 46a27 27 0 1 1-12-21"/><path d="M36 50l9 9 33-33"/></svg>
+      </div>
+      <p class="modal__texto" id="modalTitulo">Paso registrado</p>
+      <p class="modal__detalle"><%= registrado.titulo %> · <%= fechaHoraDe(registrado.evento?.registradoEn) %></p>
+      <% if (registrado.evento?.correo) { %><p class="modal__detalle">Se avisó por correo a <%= registrado.evento.correo.para.map(c => nombres[c] || c).join(', ') %>.</p><% } %>
+    </div>
+  </div>
+<% } %>
+<%- include('../partials/layout-fin') %>

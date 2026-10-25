@@ -1,0 +1,27 @@
+<%- include('../partials/layout-inicio') %>
+<div class="encabezado">
+  <div>
+    <h2 class="encabezado__titulo">Trámites</h2>
+    <p class="encabezado__info">Todos los trámites registrados en la bitácora</p>
+  </div>
+  <% if (usuario.rol === 'revisor') { %><a href="/tramites/nuevo" class="btn btn--primario btn--mediano">Nuevo trámite</a><% } %>
+</div>
+
+<div class="card tabla-card">
+  <form class="filtro" method="GET" action="/tramites">
+    <label for="estado" class="filtro__label">Estado</label>
+    <div class="select select--pequeno">
+      <select id="estado" name="estado" onchange="this.form.submit()">
+        <option value="activos" <%= filtros.estado === 'activos' ? 'selected' : '' %>>En curso</option>
+        <% Object.entries(estados).forEach(([codigo, e]) => { %>
+          <option value="<%= codigo %>" <%= filtros.estado === codigo ? 'selected' : '' %>><%= e.etiqueta %></option>
+        <% }) %>
+      </select>
+    </div>
+    <label for="q" class="filtro__label">Buscar</label>
+    <input class="campo__input buscador" id="q" name="q" value="<%= filtros.q %>" placeholder="Trámite, WF, lote o documento">
+    <button class="btn btn--primario btn--pequeno">Buscar</button>
+  </form>
+  <%- include('../partials/tablaTramites', { tramites }) %>
+</div>
+<%- include('../partials/layout-fin') %>
