@@ -20,6 +20,7 @@ const { default: sesion } = await import("./config/session.js");
 const { default: appRouter } = await import("./routes/router.js");
 const { variablesVista } = await import("./middlewares/auth.js");
 const { noEncontrado, manejadorErrores } = await import("./middlewares/errores.js");
+const { iniciarDespachador } = await import("./services/correo/despachador.js");
 
 const app = express();
 
@@ -53,4 +54,5 @@ app.listen(PORT, (err) => {
     process.exit(1);
   }
   console.log(`Server running 🚀 at http://localhost:${PORT}`);
+  iniciarDespachador();
 });

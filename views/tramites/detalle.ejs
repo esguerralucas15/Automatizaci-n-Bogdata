@@ -83,8 +83,8 @@
               <p class="linea__correo">
                 Correo a <%= e.correo.para.map(c => nombres[c] || c).join(', ') %>:
                 <% if (e.correo.estado === 'enviado') { %>enviado <%= horaDe(e.correo.enviadoEn) %>
-                <% } else if (e.correo.estado === 'fallido') { %><span class="texto-rojo">no se pudo enviar</span>
-                <% } else { %>en cola<% } %>
+                <% } else if (e.correo.estado === 'fallido') { %><span class="texto-rojo" title="<%= e.correo.ultimoError %>">no se pudo enviar</span>
+                <% } else if (e.correo.intentos > 0) { %>en cola, se reintentará<% } else { %>en cola<% } %>
               </p>
             <% } %>
             <p class="linea__sello">Evento #<%= e.secuencia %></p>
@@ -123,7 +123,9 @@
       </div>
       <p class="modal__texto" id="modalTitulo">Paso registrado</p>
       <p class="modal__detalle"><%= registrado.titulo %> · <%= fechaHoraDe(registrado.evento?.registradoEn) %></p>
-      <% if (registrado.evento?.correo) { %><p class="modal__detalle">Se avisó por correo a <%= registrado.evento.correo.para.map(c => nombres[c] || c).join(', ') %>.</p><% } %>
+      <% if (registrado.evento?.correo) { const c = registrado.evento.correo, a = c.para.map(x => nombres[x] || x).join(', '); %>
+        <p class="modal__detalle"><%= c.estado === 'enviado' ? `Se envió un correo a ${a}.` : `El correo a ${a} quedó en cola y se enviará en unos minutos.` %></p>
+      <% } %>
     </div>
   </div>
 <% } %>

@@ -9,4 +9,7 @@ router.get("/login", redirigirSiAutenticado, mostrarLogin);
 router.post("/login", redirigirSiAutenticado, iniciarSesion);
 router.post("/logout", cerrarSesion);
 
+// Pública: Google la exige para autorizar el envío de correos con Gmail
+router.get("/privacidad", (req, res) => res.render("publico/privacidad", { titulo: "Política de privacidad" }));
+
 export default router;

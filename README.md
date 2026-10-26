@@ -48,6 +48,8 @@ Se puede correr varias veces: no duplica personas.
 | `npm run cargar-usuarios -- <archivo.xlsx>` | Carga o actualiza usuarios desde la plantilla |
 | `npm run datos-prueba` | Carga los usuarios inventados |
 | `npm run verificar-bitacora` | Verifica que nadie haya alterado la bitácora |
+| `npm run autorizar-gmail` | Autoriza una vez la cuenta de Gmail que envía los correos |
+| `npm run probar-correo -- <correo>` | Envía un correo de ejemplo |
 
 ## Pantallas
 
@@ -61,8 +63,18 @@ Se puede correr varias veces: no duplica personas.
 | `/admin/usuarios` | admin | Personas, roles y destinatarios de copia |
 
 Cada paso se guarda en una transacción: trámite + evento de la bitácora + correo en cola.
-Los correos quedan en la colección `notificaciones` con estado `pendiente`; el envío real
-(despachador) es el siguiente paso del plan.
+
+## Correos
+
+Todos los avisos salen de **una sola cuenta de Gmail** por la API de Gmail (HTTPS; Render
+gratuito bloquea SMTP). Por qué Gmail y cómo configurarlo: [`docs/CORREO_GMAIL.md`](docs/CORREO_GMAIL.md).
+
+Al registrar un paso el correo se envía de inmediato; si falla queda en cola y se reintenta
+cada vez con más espera (1, 2, 4… hasta 60 min). Tras 8 intentos, o si la autorización ya no
+sirve, la línea de tiempo lo muestra como "no se pudo enviar".
+
+Con usuarios de prueba usa `CORREO_REDIRIGIR_A=tu.correo@...`: todos los correos te llegan a ti
+con el destinatario original en el asunto. **Déjalo vacío en producción.**
 
 ## Estructura
 

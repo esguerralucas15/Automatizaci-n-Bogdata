@@ -10,7 +10,9 @@
     "test": "node --test",
     "cargar-usuarios": "node scripts/cargarUsuarios.js",
     "datos-prueba": "node scripts/cargarUsuarios.js scripts/datos-prueba/usuarios-prueba.xlsx",
-    "verificar-bitacora": "node scripts/verificarBitacora.js"
+    "verificar-bitacora": "node scripts/verificarBitacora.js",
+    "probar-correo": "node scripts/probarCorreo.js",
+    "autorizar-gmail": "node scripts/autorizarGmail.js"
   },
   "license": "ISC",
   "dependencies": {

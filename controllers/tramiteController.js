@@ -5,6 +5,7 @@ import Notificacion from "../models/Notificacion.js";
 import Configuracion from "../models/Configuracion.js";
 import { ACCIONES, ESTADOS, ErrorFlujo, accionesDisponibles, etiquetaAccion } from "../services/flujo.js";
 import { registrarAccion } from "../services/registrarAccion.js";
+import { despacharDeEvento } from "../services/correo/despachador.js";
 import { valorLegible } from "../services/correo/plantillas.js";
 import { ahora, partesBogota } from "../services/tiempo.js";
 
@@ -43,6 +44,16 @@ export async function conEspera(tramites) {
       detenido: !FINALES.includes(t.estado) && horas >= conf.horasDetenido,
     };
   });
+}
+
+// Envía de una vez el correo del paso recién registrado. Si falla, queda en cola
+// y el despachador lo reintenta: el registro del paso ya quedó guardado.
+async function enviarAhora(evento) {
+  try {
+    await despacharDeEvento(evento._id);
+  } catch (err) {
+    console.error("No se pudo enviar el correo de inmediato:", err.message);
+  }
 }
 
 // --------------------------------------------------------------------------
@@ -86,7 +97,7 @@ export const nuevo = (req, res) => verNuevo(res);
 
 export async function crear(req, res) {
   try {
-    const { tramiteId } = await registrarAccion({
+    const { tramiteId, evento } = await registrarAccion({
       accion: "REGISTRAR_WF",
       usuario: req.session.usuario,
       datos: req.body,
@@ -95,6 +106,7 @@ export async function crear(req, res) {
       ip: req.ip,
       agente: req.get("user-agent"),
     });
+    await enviarAhora(evento);
     res.redirect(`/tramites/${tramiteId}?registrado=REGISTRAR_WF`);
   } catch (err) {
     if (!(err instanceof ErrorFlujo)) throw err;
@@ -156,7 +168,7 @@ export async function ejecutarAccion(req, res) {
     return verDetalle(req, res, { mensaje: "Acción no válida", status: 400 });
   }
   try {
-    await registrarAccion({
+    const { evento } = await registrarAccion({
       tramiteId: req.params.id,
       accion,
       usuario: req.session.usuario,
@@ -166,6 +178,7 @@ export async function ejecutarAccion(req, res) {
       ip: req.ip,
       agente: req.get("user-agent"),
     });
+    await enviarAhora(evento);
     res.redirect(`/tramites/${encodeURIComponent(req.params.id)}?registrado=${accion}`);
   } catch (err) {
     if (!(err instanceof ErrorFlujo)) throw err;
