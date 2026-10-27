@@ -1,0 +1,51 @@
+<%
+  // Parámetros: v (valores), errores, esNuevo, roles, url, esUnoMismo
+  const err = (k) => errores[k];
+%>
+<form class="formulario" action="<%= url %>" method="POST" novalidate>
+  <div class="formulario__campos">
+    <div class="campo <%= err('correo') ? 'is-error' : '' %>">
+      <label class="campo__label" for="correo">Correo institucional</label>
+      <% if (esNuevo) { %>
+        <input class="campo__input" type="email" id="correo" name="correo" value="<%= v.correo || '' %>" autocomplete="off" autocapitalize="none" spellcheck="false" required>
+        <p class="campo__ayuda">Es con lo que la persona entra. Después no se puede cambiar.</p>
+      <% } else { %>
+        <input class="campo__input" id="correo" value="<%= v._id %>" disabled>
+        <p class="campo__ayuda">No se puede cambiar. Si la persona cambió de correo, créala de nuevo y desactiva este.</p>
+      <% } %>
+      <% if (err('correo')) { %><p class="campo__error"><%= err('correo') %></p><% } %>
+    </div>
+    <div class="campo <%= err('nombre') ? 'is-error' : '' %>">
+      <label class="campo__label" for="nombre">Nombre completo</label>
+      <input class="campo__input" id="nombre" name="nombre" value="<%= v.nombre || '' %>" maxlength="120" required>
+      <% if (err('nombre')) { %><p class="campo__error"><%= err('nombre') %></p><% } %>
+    </div>
+    <div class="campo">
+      <label class="campo__label" for="cargo">Cargo <span class="campo__opcional">(opcional)</span></label>
+      <input class="campo__input" id="cargo" name="cargo" value="<%= v.cargo || '' %>" maxlength="120">
+    </div>
+    <div class="campo <%= err('subsecretaria') ? 'is-error' : '' %>">
+      <label class="campo__label" for="subsecretaria">Subsecretaría <span class="campo__opcional">(solo ordenador del gasto)</span></label>
+      <input class="campo__input" id="subsecretaria" name="subsecretaria" value="<%= v.subsecretaria || '' %>" maxlength="120">
+      <% if (err('subsecretaria')) { %><p class="campo__error"><%= err('subsecretaria') %></p><% } %>
+    </div>
+    <fieldset class="campo campo--ancho campo__grupo <%= err('rol') ? 'is-error' : '' %>">
+      <legend class="campo__label">Rol</legend>
+      <div class="opciones">
+        <% roles.forEach(r => { %>
+          <label class="opcion">
+            <input type="radio" name="rol" value="<%= r %>" <%= v.rol === r ? 'checked' : '' %> <%= esUnoMismo && r !== 'admin' ? 'disabled' : '' %> required>
+            <span><%= nombreRol(r) %></span>
+          </label>
+        <% }) %>
+      </div>
+      <% if (esUnoMismo) { %><p class="campo__ayuda">No puedes cambiar tu propio rol.</p><% } %>
+      <% if (err('rol')) { %><p class="campo__error"><%= err('rol') %></p><% } %>
+    </fieldset>
+    <div class="campo campo--ancho">
+      <label class="campo__label" for="observaciones">Observaciones <span class="campo__opcional">(opcional: encargos, vacaciones…)</span></label>
+      <textarea class="campo__input" id="observaciones" name="observaciones" rows="2" maxlength="500"><%= v.observaciones || '' %></textarea>
+    </div>
+  </div>
+  <button type="submit" class="btn btn--primario btn--mediano"><%= esNuevo ? 'Crear usuario' : 'Guardar cambios' %></button>
+</form>

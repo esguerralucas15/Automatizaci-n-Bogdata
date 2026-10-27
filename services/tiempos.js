@@ -4,7 +4,7 @@
 // El tiempo de respuesta de un paso = hora de su registro − hora del paso anterior del mismo
 // trámite. Ese tiempo se le atribuye a quien registró el paso (era su turno).
 // Son horas calendario (incluyen noches y fines de semana).
-import { ESTADOS } from "./flujo.js";
+import { ESTADOS, ACCIONES } from "./flujo.js";
 
 // Etapas que se miden (el cargue inicial no tiene paso anterior)
 export const ETAPAS = [
@@ -92,7 +92,8 @@ export function indicadores({ pasos, tramites = [], ahora = new Date(), nombres 
     return personas.get(correo);
   };
   for (const p of pasos) {
-    if (!p.usuario?.correo || p.usuario.rol === "sistema") continue;
+    // Solo pasos del trámite (no reasignaciones ni cambios de usuarios)
+    if (!p.usuario?.correo || p.usuario.rol === "sistema" || !ACCIONES[p.accion]) continue;
     const per = persona(p.usuario.correo, p.usuario.nombre, p.usuario.rol);
     per.pasos++;
     if (MEDIDAS.has(p.accion) && p.esperaMin !== null) per.tiempos.push(p.esperaMin);

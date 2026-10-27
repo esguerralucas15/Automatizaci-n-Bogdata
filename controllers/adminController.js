@@ -42,10 +42,15 @@ export async function usuarios(req, res) {
   const rol = ROLES.includes(req.query.rol) ? req.query.rol : "";
   const lista = await Usuario.find(rol ? { rol } : {}).sort({ activo: -1, rol: 1, nombre: 1 }).lean();
   const conf = await Configuracion.actual();
+  // Trámites en curso donde cada persona es firmante asignado
+  const activos = await Tramite.find({ estado: { $nin: ["LIBERADO", "ANULADO"] } }, { director: 1, ordenador: 1 }).lean();
+  const enCurso = {};
+  for (const t of activos) for (const c of [t.director, t.ordenador]) enCurso[c] = (enCurso[c] ?? 0) + 1;
   res.render("admin/usuarios", {
     titulo: "Usuarios",
-    lista,
+    lista: lista.map((u) => ({ ...u, enCurso: ["director", "subsecretario"].includes(u.rol) ? enCurso[u._id] ?? 0 : null })),
     roles: ROLES,
+    ok: req.query.ok ? String(req.query.ok).slice(0, 200) : null,
     filtros: { rol },
     copias: conf.destinatariosCopia.map((c) => ({ ...c, etapas: accionesDeCopia(c.recibe).map((a) => ETIQUETA_ETAPA[a]) })),
   });

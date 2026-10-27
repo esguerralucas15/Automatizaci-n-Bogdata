@@ -53,7 +53,7 @@
               <td><%= e.secuencia %></td>
               <td><%= fechaHoraDe(e.registradoEn) %></td>
               <td><% if (e.tramite) { %><a class="tabla__link" href="/tramites/<%= e.tramite %>"><%= e.tramite %></a><% } else { %>—<% } %></td>
-              <td><%= e.titulo %><% if (e.datos?.motivo) { %><br><span class="texto-gris">“<%= e.datos.motivo %>”</span><% } %><% if (e.datos?.correo && !e.tramite) { %><br><span class="texto-gris"><%= e.datos.correo %></span><% } %></td>
+              <td><%= e.titulo %><% if (e.datos?.motivo) { %><br><span class="texto-gris">“<%= e.datos.motivo %>”</span><% } %><% if (e.accion === 'TRAMITE_REASIGNADO') { %><br><span class="texto-gris"><%= e.datos.de %> → <%= e.datos.a %></span><% } %><% if (e.datos?.correo && !e.tramite) { %><br><span class="texto-gris"><%= e.datos.correo %></span><% } %></td>
               <td><%= e.usuario.nombre %><br><span class="texto-gris"><%= nombreRol(e.usuario.rol) %></span></td>
               <td><%= e.horaDeclaradaBogdata ? fechaHoraDe(e.horaDeclaradaBogdata) : '—' %></td>
               <td><%= e.esperaMin !== null ? duracionTexto(e.esperaMin) : '—' %></td>

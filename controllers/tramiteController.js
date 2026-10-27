@@ -135,7 +135,15 @@ async function verDetalle(req, res, { errores = {}, valores = {}, accionConError
     return {
       ...e,
       titulo: etiquetaAccion(e.accion),
-      detalles: Object.entries(e.datos ?? {}).map(([k, v]) => [campos[k]?.etiqueta ?? k, valorLegible(campos[k], v, p.nombres)]),
+      detalles:
+        e.accion === "TRAMITE_REASIGNADO"
+          ? [
+              ["Rol", e.datos.rol === "director" ? "Responsable de presupuesto" : "Ordenador del gasto"],
+              ["Antes", p.nombres[e.datos.de] ?? e.datos.de],
+              ["Ahora", p.nombres[e.datos.a] ?? e.datos.a],
+              ...(e.datos.motivo ? [["Motivo", e.datos.motivo]] : []),
+            ]
+          : Object.entries(e.datos ?? {}).map(([k, v]) => [campos[k]?.etiqueta ?? k, valorLegible(campos[k], v, p.nombres)]),
       correo: correoDe.get(String(e._id)) ?? null,
       diferenciaMin,
     };

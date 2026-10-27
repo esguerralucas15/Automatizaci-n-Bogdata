@@ -170,7 +170,15 @@ export function destinatariosDe(accion, estadoAnterior) {
 }
 
 export const etiquetaEstado = (estado) => ESTADOS[estado]?.etiqueta ?? estado;
-export const etiquetaAccion = (accion) => ACCIONES[accion]?.etiqueta ?? accion;
+const ETIQUETAS_ADMIN = {
+  USUARIO_CREADO: "Usuario creado",
+  USUARIO_ACTUALIZADO: "Datos de usuario actualizados",
+  ROL_CAMBIADO: "Rol cambiado",
+  USUARIO_DESACTIVADO: "Usuario desactivado",
+  USUARIO_REACTIVADO: "Usuario reactivado",
+  TRAMITE_REASIGNADO: "Firmante reasignado",
+};
+export const etiquetaAccion = (accion) => ACCIONES[accion]?.etiqueta ?? ETIQUETAS_ADMIN[accion] ?? accion;
 
 // ---------------------------------------------------------------------------
 // Validación de datos

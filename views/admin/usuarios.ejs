@@ -2,9 +2,12 @@
 <div class="encabezado">
   <div>
     <h2 class="encabezado__titulo">Usuarios</h2>
-    <p class="encabezado__info">Personas que participan en el trámite y su rol</p>
+    <p class="encabezado__info">Personas que participan en el trámite y su rol. Cada cambio queda en la bitácora.</p>
   </div>
+  <a href="/admin/usuarios/nuevo" class="btn btn--primario btn--mediano">Nuevo usuario</a>
 </div>
+
+<% if (ok) { %><div class="aviso aviso--ok"><%= ok %></div><% } %>
 
 <div class="card tabla-card">
   <p class="card__titulo">Personas registradas</p>
@@ -25,7 +28,7 @@
     <div class="tabla-scroll">
       <table class="tabla">
         <thead>
-          <tr><th>Nombre</th><th>Correo</th><th>Cargo</th><th>Rol</th><th>Subsecretaría</th><th>Estado</th></tr>
+          <tr><th>Nombre</th><th>Correo</th><th>Cargo</th><th>Rol</th><th>Subsecretaría</th><th>Firmas en curso</th><th>Estado</th><th></th></tr>
         </thead>
         <tbody>
           <% lista.forEach(u => { %>
@@ -35,14 +38,16 @@
               <td><%= u.cargo || '—' %></td>
               <td><span class="rol rol--<%= u.rol %>"><%= nombreRol(u.rol) %></span></td>
               <td><%= u.subsecretaria || '—' %></td>
+              <td><%= u.enCurso === null ? '—' : u.enCurso %></td>
               <td><span class="estado <%= u.activo ? 'estado--finalizado' : 'estado--pendiente' %>"><%= u.activo ? 'Activo' : 'Inactivo' %></span></td>
+              <td><a class="tabla__link" href="/admin/usuarios/<%= encodeURIComponent(u._id) %>">Editar</a></td>
             </tr>
           <% }) %>
         </tbody>
       </table>
     </div>
   <% } else { %>
-    <p class="vacio">No hay usuarios con este filtro. Cárgalos con <code>npm run cargar-usuarios</code>.</p>
+    <p class="vacio">No hay usuarios con este filtro.</p>
   <% } %>
 </div>
 

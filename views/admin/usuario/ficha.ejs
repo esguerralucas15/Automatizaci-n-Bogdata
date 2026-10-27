@@ -1,0 +1,112 @@
+<%- include('../../partials/layout-inicio') %>
+<% const url = '/admin/usuarios/' + encodeURIComponent(u._id); %>
+<div class="encabezado">
+  <div>
+    <h2 class="encabezado__titulo"><%= u.nombre %></h2>
+    <p class="encabezado__info"><%= u._id %> · <%= nombreRol(u.rol) %><%= u.subsecretaria ? ' · ' + u.subsecretaria : '' %></p>
+  </div>
+  <span class="estado estado--grande <%= u.activo ? 'estado--finalizado' : 'estado--pendiente' %>"><%= u.activo ? 'Activo' : 'Inactivo' %></span>
+</div>
+<p class="volver"><a href="/admin/usuarios" class="tabla__link">← Volver a usuarios</a></p>
+
+<% if (ok) { %><div class="aviso aviso--ok"><%= ok %></div><% } %>
+<% if (mensaje) { %><div class="alerta" role="alert"><%= mensaje %></div><% } %>
+
+<div class="detalle">
+  <div class="detalle__principal">
+    <div class="card card--formulario">
+      <p class="card__titulo">Datos y rol</p>
+      <%- include('datos', { v: valores, errores: seccion === 'datos' ? errores : {}, esNuevo: false, roles, url, esUnoMismo }) %>
+    </div>
+
+    <% if (campo) { %>
+      <div class="card card--formulario <%= asignados.length ? 'card--accion' : '' %>">
+        <p class="card__titulo">Reasignar trámites</p>
+        <% if (asignados.length) { %>
+          <p class="espera__texto">Tiene <strong><%= asignados.length %></strong> <%= asignados.length === 1 ? 'trámite en curso' : 'trámites en curso' %> como <%= nombreRol(u.rol).toLowerCase() %>. Para un encargo, vacaciones o retiro, pásalos a otra persona del mismo rol. Si alguno espera su firma, a la persona nueva le llega un correo.</p>
+          <ul class="lista-simple">
+            <% asignados.forEach(t => { %><li><a class="tabla__link" href="/tramites/<%= t._id %>"><%= t._id %></a> · WF <%= t.wfActual %> · <%= etiquetaEstado(t.estado) %></li><% }) %>
+          </ul>
+          <% if (reemplazos.length) { %>
+            <form class="formulario" action="<%= url %>/reasignar" method="POST" novalidate>
+              <div class="formulario__campos">
+                <div class="campo <%= seccion === 'reasignar' && errores.reemplazo ? 'is-error' : '' %>">
+                  <label class="campo__label" for="reemplazo">Pasar a</label>
+                  <div class="select select--campo">
+                    <select id="reemplazo" name="reemplazo" required>
+                      <option value="">Elige una persona</option>
+                      <% reemplazos.forEach(r => { %><option value="<%= r._id %>"><%= r.nombre %><%= r.subsecretaria ? ' – ' + r.subsecretaria : '' %></option><% }) %>
+                    </select>
+                  </div>
+                  <% if (seccion === 'reasignar' && errores.reemplazo) { %><p class="campo__error"><%= errores.reemplazo %></p><% } %>
+                </div>
+                <div class="campo">
+                  <label class="campo__label" for="motivo">Motivo <span class="campo__opcional">(opcional)</span></label>
+                  <input class="campo__input" id="motivo" name="motivo" maxlength="300" placeholder="Ej. encargo por vacaciones">
+                </div>
+              </div>
+              <button type="submit" class="btn btn--primario btn--mediano">Reasignar <%= asignados.length === 1 ? 'el trámite' : 'los ' + asignados.length + ' trámites' %></button>
+            </form>
+          <% } else { %>
+            <p class="vacio">No hay otra persona activa con este rol. Crea o reactiva primero a quien la reemplazará.</p>
+          <% } %>
+        <% } else { %>
+          <p class="vacio">No tiene trámites en curso asignados.</p>
+        <% } %>
+      </div>
+    <% } %>
+
+    <div class="card">
+      <p class="card__titulo">Actividad reciente</p>
+      <% if (actividad.length) { %>
+        <div class="tabla-scroll">
+          <table class="tabla tabla--compacta">
+            <thead><tr><th>Fecha y hora</th><th>Qué pasó</th><th>Trámite</th><th>Hecho por</th></tr></thead>
+            <tbody>
+              <% actividad.forEach(e => { %>
+                <tr>
+                  <td><%= fechaHoraDe(e.registradoEn) %></td>
+                  <td><%= e.titulo %>
+                    <% if (e.datos?.cambios) { %><br><span class="texto-gris"><%= Object.entries(e.datos.cambios).map(([k, c]) => `${k}: ${k === 'rol' ? nombreRol(c.antes) : c.antes || '—'} → ${k === 'rol' ? nombreRol(c.ahora) : c.ahora || '—'}`).join(' · ') %></span><% } %>
+                    <% if (e.accion === 'TRAMITE_REASIGNADO') { %><br><span class="texto-gris"><%= e.datos.de === u._id ? 'Pasó a ' + e.datos.a : 'Recibió de ' + e.datos.de %><%= e.datos.motivo ? ' · ' + e.datos.motivo : '' %></span><% } %>
+                  </td>
+                  <td><% if (e.tramite) { %><a class="tabla__link" href="/tramites/<%= e.tramite %>"><%= e.tramite %></a><% } else { %>—<% } %></td>
+                  <td><%= e.usuario.nombre %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <p class="vacio">Sin actividad registrada.</p>
+      <% } %>
+    </div>
+  </div>
+
+  <aside class="detalle__lateral">
+    <div class="card">
+      <p class="card__titulo"><%= u.activo ? 'Desactivar' : 'Reactivar' %></p>
+      <% if (u.activo) { %>
+        <p class="espera__texto">Al desactivarla, la persona ya no puede entrar ni recibe correos. Su historial se conserva en la bitácora.</p>
+        <% if (esUnoMismo) { %>
+          <p class="vacio">No puedes desactivarte a ti mismo.</p>
+        <% } else { %>
+          <details class="plegable" <%= seccion === 'estado' ? 'open' : '' %>>
+            <summary>Desactivar a <%= u.nombre.split(' ')[0] %></summary>
+            <form action="<%= url %>/estado" method="POST" class="formulario">
+              <input type="hidden" name="activo" value="no">
+              <button type="submit" class="btn btn--secundario btn--pequeno">Sí, desactivar</button>
+            </form>
+          </details>
+        <% } %>
+      <% } else { %>
+        <p class="espera__texto">Al reactivarla, vuelve a entrar con su correo y a recibir avisos.</p>
+        <form action="<%= url %>/estado" method="POST" class="formulario">
+          <input type="hidden" name="activo" value="si">
+          <button type="submit" class="btn btn--primario btn--pequeno">Reactivar</button>
+        </form>
+      <% } %>
+    </div>
+  </aside>
+</div>
+<%- include('../../partials/layout-fin') %>

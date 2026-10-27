@@ -1,0 +1,14 @@
+<%- include('../../partials/layout-inicio') %>
+<div class="encabezado">
+  <div>
+    <h2 class="encabezado__titulo">Nuevo usuario</h2>
+    <p class="encabezado__info">La persona podrá entrar con su correo apenas la crees. El alta queda en la bitácora.</p>
+  </div>
+  <a href="/admin/usuarios" class="tabla__link">← Volver a usuarios</a>
+</div>
+<% if (mensaje) { %><div class="alerta" role="alert"><%= mensaje %></div><% } %>
+<div class="card card--formulario">
+  <p class="card__titulo">Datos de la persona</p>
+  <%- include('datos', { v: valores, errores, esNuevo: true, roles, url: '/admin/usuarios', esUnoMismo: false }) %>
+</div>
+<%- include('../../partials/layout-fin') %>

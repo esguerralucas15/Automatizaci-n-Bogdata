@@ -31,9 +31,10 @@ const eventoSchema = new Schema(
   { collection: "eventos", versionKey: false, minimize: false }
 );
 
-// Eventos de administración de usuarios (no cambian el estado de un trámite)
+// Eventos de administración (no cambian el estado de un trámite). TRAMITE_REASIGNADO sí
+// lleva el trámite: cambia quién debe firmarlo (encargos, retiros, vacaciones).
 function EVENTOS_ADMIN() {
-  return ["USUARIO_CREADO", "USUARIO_ACTUALIZADO", "ROL_CAMBIADO", "USUARIO_DESACTIVADO", "USUARIO_REACTIVADO"];
+  return ["USUARIO_CREADO", "USUARIO_ACTUALIZADO", "ROL_CAMBIADO", "USUARIO_DESACTIVADO", "USUARIO_REACTIVADO", "TRAMITE_REASIGNADO"];
 }
 
 const BLOQUEADO = "La bitácora no se puede modificar ni borrar";

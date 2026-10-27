@@ -163,11 +163,17 @@ export async function registrarAccion({ tramiteId = null, accion, usuario, datos
         Configuracion.actual(),
         Usuario.find({ _id: { $in: [actualizado.director, actualizado.ordenador, actualizado.revisor] } }, { nombre: 1 }).session(session).lean(),
       ]);
-      const { para, cc } = resolverDestinatarios(r.notificar, actualizado, {
+      let { para, cc } = resolverDestinatarios(r.notificar, actualizado, {
         admins: admins.map((a) => a._id),
         copias: copiasPara(accion, conf.destinatariosCopia),
         autor: usuario.correo,
       });
+      // Las personas desactivadas no reciben correos (p. ej. un revisor que ya no está)
+      const inactivos = new Set(
+        (await Usuario.find({ _id: { $in: [...para, ...cc] }, activo: false }, { _id: 1 }).session(session).lean()).map((u) => u._id)
+      );
+      para = para.filter((c) => !inactivos.has(c));
+      cc = cc.filter((c) => !inactivos.has(c));
       if (para.length || cc.length) {
         const nombres = Object.fromEntries(personas.map((p) => [p._id, p.nombre]));
         const { asunto, cuerpoHtml } = armarCorreo({ tramite: actualizado, evento, horaTexto: horaTexto(evento.registradoEn), nombres });
