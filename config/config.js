@@ -25,7 +25,7 @@ export const CORREO = {
   proveedor: (process.env.CORREO_PROVEEDOR || (process.env.GMAIL_REFRESH_TOKEN ? "gmail" : "brevo")).trim().toLowerCase(),
   remitente: (process.env.CORREO_REMITENTE || "").trim().toLowerCase(),
   nombreRemitente: process.env.NOMBRE_REMITENTE || "Bitácora de Pagos",
-  // A dónde van las respuestas (p. ej. la administradora). Opcional.
+  // A dónde van las respuestas (p. ej. la administración). Opcional.
   responderA: (process.env.CORREO_RESPONDER_A || "").trim().toLowerCase(),
   // Solo para pruebas: si tiene un correo, TODOS los envíos van a esa dirección
   // (los usuarios de prueba @prueba.gov.co no existen).

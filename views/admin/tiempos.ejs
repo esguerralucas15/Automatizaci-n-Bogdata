@@ -1,0 +1,106 @@
+<%- include('../partials/layout-inicio') %>
+<%
+  const consulta = `desde=${periodo.desde}&hasta=${periodo.hasta}`;
+  const maxPersona = Math.max(1, ...ind.porPersona.map(p => p.promedio ?? 0));
+  const maxEtapa = Math.max(1, ...ind.porEtapa.map(e => e.promedio ?? 0));
+%>
+<div class="encabezado">
+  <div>
+    <h2 class="encabezado__titulo">Tiempos de respuesta</h2>
+    <p class="encabezado__info">Cuánto tarda cada persona en registrar su paso desde que el trámite queda en su turno. Horas calendario, hora de Bogotá.</p>
+  </div>
+  <a href="/admin/tiempos?<%= consulta %>&formato=xlsx" class="btn btn--primario btn--mediano">Exportar a Excel</a>
+</div>
+
+<div class="card filtro-card">
+  <form class="filtro" method="GET" action="/admin/tiempos">
+    <label for="desde" class="filtro__label">Desde</label>
+    <input class="campo__input campo__input--fecha" type="date" id="desde" name="desde" value="<%= periodo.desde %>">
+    <label for="hasta" class="filtro__label">Hasta</label>
+    <input class="campo__input campo__input--fecha" type="date" id="hasta" name="hasta" value="<%= periodo.hasta %>">
+    <button class="btn btn--primario btn--pequeno">Consultar</button>
+  </form>
+</div>
+
+<div class="card tabla-card">
+  <p class="card__titulo">Por persona</p>
+  <% if (ind.porPersona.length) { %>
+    <div class="tabla-scroll">
+      <table class="tabla">
+        <thead><tr><th>Persona</th><th>Rol</th><th>Pasos</th><th>Promedio</th><th></th><th>Máximo</th><th>Registro tardío</th><th>Esperando ahora</th></tr></thead>
+        <tbody>
+          <% ind.porPersona.forEach(p => { %>
+            <tr>
+              <td><%= p.nombre %></td>
+              <td><%= nombreRol(p.rol) %></td>
+              <td><%= p.pasos %></td>
+              <td><strong><%= duracionTexto(p.promedio) %></strong></td>
+              <td><div class="barra barra--tabla"><div class="barra__relleno" style="width: <%= Math.round(((p.promedio ?? 0) / maxPersona) * 100) %>%"></div></div></td>
+              <td><%= duracionTexto(p.maximo) %></td>
+              <td><%= p.tardanzaPromedio ? duracionTexto(p.tardanzaPromedio) : '—' %></td>
+              <td>
+                <% if (p.pendientes.length) { %>
+                  <%= p.pendientes.length %> <%= p.pendientes.length === 1 ? 'trámite' : 'trámites' %>, el más antiguo hace <%= duracionTexto(p.esperaMasLarga) %>
+                <% } else { %>—<% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <p class="nota-tabla">Promedio y máximo: tiempo entre el paso anterior del trámite y el registro de la persona. Registro tardío: diferencia entre la hora que la persona declaró para BOGDATA y la hora en que lo registró aquí.</p>
+  <% } else { %>
+    <p class="vacio">No hay pasos registrados en este periodo.</p>
+  <% } %>
+</div>
+
+<div class="card tabla-card historial">
+  <p class="card__titulo">Por etapa</p>
+  <div class="tabla-scroll">
+    <table class="tabla">
+      <thead><tr><th>Etapa</th><th>Veces</th><th>Promedio</th><th></th><th>Mediana</th><th>Máximo</th></tr></thead>
+      <tbody>
+        <% ind.porEtapa.forEach(e => { %>
+          <tr>
+            <td><%= e.etiqueta %></td>
+            <td><%= e.n %></td>
+            <td><strong><%= duracionTexto(e.promedio) %></strong></td>
+            <td><div class="barra barra--tabla"><div class="barra__relleno barra__relleno--dorado" style="width: <%= Math.round(((e.promedio ?? 0) / maxEtapa) * 100) %>%"></div></div></td>
+            <td><%= duracionTexto(e.mediana) %></td>
+            <td><%= duracionTexto(e.maximo) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card tabla-card historial">
+  <p class="card__titulo">Por trámite</p>
+  <% if (porTramite.length) { %>
+    <div class="tabla-scroll">
+      <table class="tabla tabla--compacta">
+        <thead>
+          <tr><th>Trámite</th><th>WF</th><th>Estado</th>
+            <% etapasMedidas.forEach(e => { %><th><%= e.corta %></th><% }) %>
+            <th>Total</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% porTramite.forEach(t => { %>
+            <tr>
+              <td><%= t._id %></td>
+              <td><%= t.wfActual %></td>
+              <td><span class="estado estado--<%= t.estado.toLowerCase() %>"><%= etiquetaEstado(t.estado) %></span><% if (t.rechazos) { %> <span class="estado estado--devuelto"><%= t.rechazos %> rechazo<%= t.rechazos > 1 ? 's' : '' %></span><% } %></td>
+              <% etapasMedidas.forEach(e => { %><td><%= t.etapas[e.accion] !== undefined ? duracionTexto(t.etapas[e.accion]) : '—' %></td><% }) %>
+              <td><strong><%= duracionTexto(t.totalMin) %></strong><%= t.abierto ? ' (en curso)' : '' %></td>
+              <td><a class="tabla__link" href="/tramites/<%= t._id %>">Ver detalle</a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <p class="vacio">No hay trámites con movimientos en este periodo.</p>
+  <% } %>
+</div>
+<%- include('../partials/layout-fin') %>

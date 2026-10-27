@@ -1,6 +1,7 @@
 // Validación de la plantilla "Plantilla_Usuarios_Bitacora.xlsx" (hojas Usuarios y Solo copia).
 // No toca la base de datos ni lee archivos: recibe filas ya leídas, así se prueba fácil.
 import { ROLES, CORREO } from "../models/roles.js";
+import { accionesDeCopia } from "./copias.js";
 
 // Encabezados de la plantilla -> campo
 const COLUMNAS_USUARIOS = {
@@ -108,7 +109,15 @@ export function validarCopias({ encabezados, filas, primeraFila = 2 }) {
       errores.push(`Solo copia, fila ${o.numeroFila}: correo no válido ("${o.correo}")`);
       continue;
     }
-    copias.push({ correo, nombre: o.nombre ?? "", recibe: o.recibe || "Todos" });
+    const recibe = o.recibe || "Todos";
+    if (!accionesDeCopia(recibe).length) {
+      errores.push(
+        `Solo copia, fila ${o.numeroFila}: no se entiende qué correos recibe ("${recibe}"). ` +
+          "Use por ejemplo: Registro de WF y Lote, Aprobación nivel 1, Aprobación nivel 2, Liberación, Rechazo o Todos"
+      );
+      continue;
+    }
+    copias.push({ correo, nombre: o.nombre ?? "", recibe });
   }
   return { copias, errores };
 }

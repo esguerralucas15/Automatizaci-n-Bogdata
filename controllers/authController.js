@@ -24,7 +24,7 @@ export async function iniciarSesion(req, res, next) {
   if (!registrado) {
     return res.status(401).render("auth/login", {
       titulo: TITULO,
-      error: "El correo no está registrado. Solicita acceso a la administradora.",
+      error: "El correo no está registrado. Solicita acceso a la administración de la bitácora.",
       correo,
     });
   }

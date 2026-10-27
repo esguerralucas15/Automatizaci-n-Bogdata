@@ -39,7 +39,7 @@ export async function conEspera(tramites) {
     const horas = (instante - new Date(t.ultimoEventoEn).getTime()) / 3600000;
     return {
       ...t,
-      esperaDe: campo === "revisor" ? "Revisor" : campo ? nombres[t[campo]] ?? t[campo] : null,
+      esperaDe: campo === "revisor" ? "Equipo revisor" : campo ? nombres[t[campo]] ?? t[campo] : null,
       horasEspera: horas,
       detenido: !FINALES.includes(t.estado) && horas >= conf.horasDetenido,
     };

@@ -38,7 +38,7 @@ export async function insertarEvento(datos, session) {
   return doc;
 }
 
-// Verifica toda la bitácora (para la pantalla de la administradora y el script)
+// Verifica toda la bitácora (para la pantalla de administración y el script)
 export async function verificarBitacora() {
   const eventos = await Evento.find({}).sort({ secuencia: 1 }).lean();
   return verificarCadena(eventos);

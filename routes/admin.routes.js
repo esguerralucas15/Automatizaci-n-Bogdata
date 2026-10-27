@@ -8,5 +8,7 @@ router.use(requiereSesion, soloRoles("admin"));
 router.get("/", (req, res) => res.redirect("/admin/dashboard"));
 router.get("/dashboard", admin.dashboard);
 router.get("/usuarios", admin.usuarios);
+router.get("/tiempos", admin.tiempos);
+router.get("/bitacora", admin.bitacora);
 
 export default router;

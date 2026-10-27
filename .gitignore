@@ -1,5 +1,7 @@
 node_modules
 .env
+.env.*
+!.env.example
 .DS_Store
 
 # Datos personales: Excel diligenciado con los usuarios reales

@@ -2,10 +2,10 @@
 export const ROLES = ["revisor", "director", "subsecretario", "admin"];
 
 export const NOMBRE_ROL = {
-  revisor: "Revisor",
+  revisor: "Revisor(a)",
   director: "Responsable de presupuesto",
   subsecretario: "Ordenador del gasto",
-  admin: "Administradora",
+  admin: "Administrador(a)",
 };
 
 // Página de inicio según el rol

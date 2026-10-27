@@ -1,0 +1,76 @@
+<%- include('../partials/layout-inicio') %>
+<%
+  const params = (extra) => new URLSearchParams(Object.entries({ ...filtros, ...extra }).filter(([, v]) => v)).toString();
+%>
+<div class="encabezado">
+  <div>
+    <h2 class="encabezado__titulo">Bitácora</h2>
+    <p class="encabezado__info">Todos los pasos registrados, con la hora del servidor. Nadie puede modificarlos ni borrarlos.</p>
+  </div>
+  <a href="/admin/bitacora?<%= params({ verificar: 1 }) %>" class="btn btn--secundario btn--mediano">Verificar integridad</a>
+</div>
+
+<% if (verificacion) { %>
+  <% if (verificacion.ok) { %>
+    <div class="aviso aviso--ok">✔ Bitácora íntegra: se verificaron los <%= verificacion.total %> eventos y ninguno fue alterado ni borrado.</div>
+  <% } else { %>
+    <div class="alerta">✘ La bitácora fue alterada en el evento #<%= verificacion.secuencia %>: <%= verificacion.motivo %>.</div>
+  <% } %>
+<% } %>
+
+<div class="card filtro-card">
+  <form class="filtro" method="GET" action="/admin/bitacora">
+    <label for="desde" class="filtro__label">Desde</label>
+    <input class="campo__input campo__input--fecha" type="date" id="desde" name="desde" value="<%= filtros.desde %>">
+    <label for="hasta" class="filtro__label">Hasta</label>
+    <input class="campo__input campo__input--fecha" type="date" id="hasta" name="hasta" value="<%= filtros.hasta %>">
+    <div class="select select--pequeno select--filtro">
+      <select name="persona" aria-label="Persona">
+        <option value="">Todas las personas</option>
+        <% personas.forEach(p => { %><option value="<%= p._id %>" <%= filtros.persona === p._id ? 'selected' : '' %>><%= p.nombre %></option><% }) %>
+      </select>
+    </div>
+    <div class="select select--pequeno select--filtro">
+      <select name="accion" aria-label="Paso">
+        <option value="">Todos los pasos</option>
+        <% acciones.forEach(a => { %><option value="<%= a %>" <%= filtros.accion === a ? 'selected' : '' %>><%= etiquetaAccion(a) %></option><% }) %>
+      </select>
+    </div>
+    <input class="campo__input buscador" name="q" value="<%= filtros.q %>" placeholder="Trámite, WF o lote" aria-label="Buscar trámite">
+    <button class="btn btn--primario btn--pequeno">Filtrar</button>
+  </form>
+</div>
+
+<div class="card tabla-card">
+  <p class="card__titulo"><%= total %> <%= total === 1 ? 'evento' : 'eventos' %></p>
+  <% if (eventos.length) { %>
+    <div class="tabla-scroll">
+      <table class="tabla tabla--compacta">
+        <thead><tr><th>#</th><th>Fecha y hora</th><th>Trámite</th><th>Paso</th><th>Persona</th><th>Hora en BOGDATA</th><th>Tiempo de respuesta</th></tr></thead>
+        <tbody>
+          <% eventos.forEach(e => { %>
+            <tr>
+              <td><%= e.secuencia %></td>
+              <td><%= fechaHoraDe(e.registradoEn) %></td>
+              <td><% if (e.tramite) { %><a class="tabla__link" href="/tramites/<%= e.tramite %>"><%= e.tramite %></a><% } else { %>—<% } %></td>
+              <td><%= e.titulo %><% if (e.datos?.motivo) { %><br><span class="texto-gris">“<%= e.datos.motivo %>”</span><% } %><% if (e.datos?.correo && !e.tramite) { %><br><span class="texto-gris"><%= e.datos.correo %></span><% } %></td>
+              <td><%= e.usuario.nombre %><br><span class="texto-gris"><%= nombreRol(e.usuario.rol) %></span></td>
+              <td><%= e.horaDeclaradaBogdata ? fechaHoraDe(e.horaDeclaradaBogdata) : '—' %></td>
+              <td><%= e.esperaMin !== null ? duracionTexto(e.esperaMin) : '—' %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% if (paginas > 1) { %>
+      <nav class="paginacion">
+        <% if (pagina > 1) { %><a class="tabla__link" href="/admin/bitacora?<%= params({ pagina: pagina - 1 }) %>">← Más recientes</a><% } %>
+        <span>Página <%= pagina %> de <%= paginas %></span>
+        <% if (pagina < paginas) { %><a class="tabla__link" href="/admin/bitacora?<%= params({ pagina: pagina + 1 }) %>">Más antiguos →</a><% } %>
+      </nav>
+    <% } %>
+  <% } else { %>
+    <p class="vacio">No hay eventos con estos filtros.</p>
+  <% } %>
+</div>
+<%- include('../partials/layout-fin') %>

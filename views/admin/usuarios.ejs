@@ -51,10 +51,10 @@
   <% if (copias.length) { %>
     <div class="tabla-scroll">
       <table class="tabla">
-        <thead><tr><th>Nombre o área</th><th>Correo</th><th>Recibe</th></tr></thead>
+        <thead><tr><th>Nombre o área</th><th>Correo</th><th>Recibe (según el área)</th><th>Copia en</th></tr></thead>
         <tbody>
           <% copias.forEach(c => { %>
-            <tr><td><%= c.nombre || '—' %></td><td><%= c.correo %></td><td><%= c.recibe %></td></tr>
+            <tr><td><%= c.nombre || '—' %></td><td><%= c.correo %></td><td><%= c.recibe %></td><td><%= c.etapas.join(', ') || '—' %></td></tr>
           <% }) %>
         </tbody>
       </table>

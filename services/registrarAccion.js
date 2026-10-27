@@ -10,6 +10,7 @@ import Configuracion from "../models/Configuracion.js";
 import { aplicarAccion, ErrorFlujo } from "./flujo.js";
 import { insertarEvento } from "./bitacora.js";
 import { resolverDestinatarios } from "./destinatarios.js";
+import { copiasPara } from "./copias.js";
 import { armarCorreo } from "./correo/plantillas.js";
 import { ahora, aFechaHora, partesBogota, fechaLegible, horaLegible } from "./tiempo.js";
 
@@ -164,7 +165,7 @@ export async function registrarAccion({ tramiteId = null, accion, usuario, datos
       ]);
       const { para, cc } = resolverDestinatarios(r.notificar, actualizado, {
         admins: admins.map((a) => a._id),
-        copias: conf.destinatariosCopia,
+        copias: copiasPara(accion, conf.destinatariosCopia),
         autor: usuario.correo,
       });
       if (para.length || cc.length) {

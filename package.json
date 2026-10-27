@@ -12,7 +12,10 @@
     "datos-prueba": "node scripts/cargarUsuarios.js scripts/datos-prueba/usuarios-prueba.xlsx",
     "verificar-bitacora": "node scripts/verificarBitacora.js",
     "probar-correo": "node scripts/probarCorreo.js",
-    "autorizar-gmail": "node scripts/autorizarGmail.js"
+    "autorizar-gmail": "node scripts/autorizarGmail.js",
+    "produccion:cargar-usuarios": "node --env-file=.env.produccion scripts/cargarUsuarios.js",
+    "produccion:verificar-bitacora": "node --env-file=.env.produccion scripts/verificarBitacora.js",
+    "produccion:dev": "node --env-file=.env.produccion app.js"
   },
   "license": "ISC",
   "dependencies": {

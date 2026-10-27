@@ -548,3 +548,16 @@ p { margin: 0; }
 .privacidad__texto { text-align: left; font-family: var(--fuente-ui); font-size: 16px; line-height: 1.6; margin-bottom: 36px; }
 .privacidad__texto h2 { font-family: var(--fuente-titulos); font-size: 26px; margin: 26px 0 6px; }
 .privacidad__fecha { margin-top: 20px; color: var(--gris-texto); font-size: 14px; }
+
+/* Tiempos y bitácora (administración) */
+.filtro-card { margin-bottom: 24px; padding: 18px 32px; }
+.filtro-card .filtro { margin-top: 0; }
+.campo__input--fecha { width: auto; min-height: 48px; padding: 8px 14px; }
+.select--filtro { width: auto; min-width: 200px; max-width: 300px; }
+.barra__relleno--dorado { background: var(--dorado); }
+.nota-tabla { margin-top: 12px; font-family: var(--fuente-ui); font-size: 13px; color: var(--gris-texto); line-height: 1.5; }
+.tabla--compacta td, .tabla--compacta th { padding: 10px 10px; }
+.tabla--compacta th { font-size: 17px; }
+.texto-gris { color: var(--gris-texto); font-size: 13px; }
+.aviso--ok { background: #dcefe0; color: #24613a; }
+.paginacion { display: flex; justify-content: center; align-items: center; gap: 24px; margin-top: 18px; font-family: var(--fuente-ui); font-size: 14px; }

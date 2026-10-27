@@ -19,7 +19,7 @@ export const ESTADOS = {
   LOTE_FIRMADO_PRESUPUESTO: { etiqueta: "Lote firmado por Presupuesto", espera: "Firma del lote – Ordenador del gasto", responsable: "ordenador", etapa: 5 },
   LOTE_FIRMADO: { etiqueta: "Lote firmado", espera: "Confirmación de liberación", responsable: "revisor", etapa: 6 },
   LIBERADO: { etiqueta: "Liberado para pago", espera: null, responsable: null, etapa: 7, final: true },
-  DEVUELTO: { etiqueta: "Devuelto", espera: "Reinicio o anulación por el revisor", responsable: "revisor", etapa: 0 },
+  DEVUELTO: { etiqueta: "Devuelto", espera: "Reinicio o anulación (equipo revisor)", responsable: "revisor", etapa: 0 },
   ANULADO: { etiqueta: "Anulado", espera: null, responsable: null, etapa: 0, final: true },
 };
 
@@ -30,7 +30,8 @@ const ETAPAS_DE_FIRMA = ["WF_CARGADO", "WF_APROBADO_PRESUPUESTO", "LOTE_CREADO",
 
 // Tipos de campo: texto, numeroWF, dinero, entero, correo, booleano, lista, opcion
 // "notificar": claves que el servicio de correo convierte en direcciones:
-//   director | ordenador | revisor (quien creó el trámite) | admin | copias
+//   director | ordenador | revisor (quien creó el trámite) | admin
+// Además, cada acción lleva en copia a quien la hoja "Solo copia" indique (services/copias.js).
 export const ACCIONES = {
   REGISTRAR_WF: {
     etiqueta: "Registrar cargue en BOGDATA",
@@ -92,7 +93,7 @@ export const ACCIONES = {
     campos: {
       avisoEmbargos: { tipo: "booleano", requerido: true, etiqueta: "¿Llegó aviso de embargos?" },
     },
-    notificar: ["admin", "copias"],
+    notificar: ["admin"],
   },
   RECHAZAR: {
     etiqueta: "Registrar rechazo",
