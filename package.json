@@ -13,6 +13,8 @@
     "verificar-bitacora": "node scripts/verificarBitacora.js",
     "probar-correo": "node scripts/probarCorreo.js",
     "autorizar-gmail": "node scripts/autorizarGmail.js",
+    "crear-usuario": "node scripts/crearUsuario.js",
+    "produccion:crear-usuario": "node --env-file=.env.produccion scripts/crearUsuario.js",
     "produccion:cargar-usuarios": "node --env-file=.env.produccion scripts/cargarUsuarios.js",
     "produccion:verificar-bitacora": "node --env-file=.env.produccion scripts/verificarBitacora.js",
     "produccion:dev": "node --env-file=.env.produccion app.js"

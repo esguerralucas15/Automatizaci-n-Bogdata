@@ -1,0 +1,35 @@
+# Despliegue en Render (https://render.com). Ver docs/DESPLIEGUE_RENDER.md.
+# Las variables con sync: false se escriben en el panel de Render (o con "Add from .env"
+# pegando el contenido de .env.produccion); nunca se guardan en el repositorio.
+services:
+  - type: web
+    name: bitacora-pagos
+    runtime: node
+    plan: free
+    region: ohio
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /salud
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: URL_APP
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: CORREO_PROVEEDOR
+        value: gmail
+      - key: CORREO_REMITENTE
+        sync: false
+      - key: NOMBRE_REMITENTE
+        value: Bitácora de Pagos
+      - key: CORREO_RESPONDER_A
+        sync: false
+      - key: GMAIL_CLIENT_ID
+        sync: false
+      - key: GMAIL_CLIENT_SECRET
+        sync: false
+      - key: GMAIL_REFRESH_TOKEN
+        sync: false
