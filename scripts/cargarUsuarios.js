@@ -14,6 +14,7 @@ import Usuario from "../models/Usuario.js";
 import Configuracion from "../models/Configuracion.js";
 import { validarUsuarios, validarCopias } from "../services/usuariosExcel.js";
 import { abrirLibro, leerHoja } from "../services/leerExcel.js";
+import { claveSubsecretaria } from "../services/copias.js";
 import { insertarEvento, SISTEMA } from "../services/bitacora.js";
 
 const ruta = process.argv[2];
@@ -32,6 +33,13 @@ async function main() {
   const u = validarUsuarios(leerHoja(libro, "Usuarios"));
   const c = validarCopias(leerHoja(libro, "Solo copia"));
   const errores = [...u.errores, ...c.errores];
+  // La subsecretaría de una copia debe ser la de algún ordenador del gasto del archivo
+  const conocidas = new Set(u.usuarios.filter((x) => x.rol === "subsecretario").map((x) => claveSubsecretaria(x.subsecretaria)));
+  for (const x of c.copias) {
+    if (x.subsecretaria && !conocidas.has(claveSubsecretaria(x.subsecretaria))) {
+      errores.push(`Solo copia, ${x.correo}: la subsecretaría "${x.subsecretaria}" no coincide con la de ningún ordenador del gasto de la hoja Usuarios`);
+    }
+  }
   if (errores.length) {
     console.error(`\nEl archivo tiene ${errores.length} error(es). No se cargó nada:\n`);
     errores.forEach((e) => console.error(`  • ${e}`));

@@ -22,6 +22,9 @@ const tramiteSchema = new Schema(
     revisor: { type: String, required: true },
     director: { type: String, required: true },
     ordenador: { type: String, required: true },
+    // Subsecretaría a la que va dirigido (la del ordenador del gasto elegido por el revisor).
+    // No cambia si se reasigna el firmante por un encargo.
+    subsecretaria: { type: String, default: "" },
     ultimoEventoEn: { type: Date, required: true },
   },
   { collection: "tramites", versionKey: false, timestamps: true }

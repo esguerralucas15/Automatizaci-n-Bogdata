@@ -20,6 +20,8 @@ const COLUMNAS_COPIA = {
   "nombre o area": "nombre",
   "qué correos debe recibir": "recibe",
   "que correos debe recibir": "recibe",
+  "subsecretaría": "subsecretaria",
+  "subsecretaria": "subsecretaria",
 };
 
 // Nombres que alguien podría escribir en lugar del código del rol
@@ -117,7 +119,7 @@ export function validarCopias({ encabezados, filas, primeraFila = 2 }) {
       );
       continue;
     }
-    copias.push({ correo, nombre: o.nombre ?? "", recibe });
+    copias.push({ correo, nombre: o.nombre ?? "", recibe, subsecretaria: o.subsecretaria ?? "" });
   }
   return { copias, errores };
 }

@@ -51,6 +51,7 @@ async function validarAsignados(datos, session) {
   if (director?.rol !== "director") errores.director = "Elige un responsable de presupuesto activo";
   if (ordenador?.rol !== "subsecretario") errores.ordenador = "Elige un ordenador del gasto activo";
   if (Object.keys(errores).length) throw new ErrorFlujo("Revisa los datos marcados", errores);
+  return { ordenador };
 }
 
 // Un WF solo puede estar en un trámite activo a la vez
@@ -98,8 +99,10 @@ export async function registrarAccion({ tramiteId = null, accion, usuario, datos
       const hora = validarHoraDeclarada(horaDeclarada, { instante, desde: tramite?.ultimoEventoEn });
 
       let id = tramite?._id;
+      let subsecretariaNueva = "";
       if (accion === "REGISTRAR_WF") {
-        await validarAsignados(r.datos, session);
+        const asignados = await validarAsignados(r.datos, session);
+        subsecretariaNueva = asignados.ordenador.subsecretaria ?? "";
         await validarWfLibre(r.datos.wf, session);
         const anio = partesBogota(instante).fecha.slice(0, 4);
         const n = await Contador.siguiente(`tramites-${anio}`, session);
@@ -142,6 +145,7 @@ export async function registrarAccion({ tramiteId = null, accion, usuario, datos
             revisor: usuario.correo,
             director: r.datos.director,
             ordenador: r.datos.ordenador,
+            subsecretaria: subsecretariaNueva,
             ultimoEventoEn: evento.registradoEn,
           }],
           { session }
@@ -161,11 +165,14 @@ export async function registrarAccion({ tramiteId = null, accion, usuario, datos
       const [admins, conf, personas] = await Promise.all([
         Usuario.find({ rol: "admin", activo: true }, { _id: 1 }).session(session).lean(),
         Configuracion.actual(),
-        Usuario.find({ _id: { $in: [actualizado.director, actualizado.ordenador, actualizado.revisor] } }, { nombre: 1 }).session(session).lean(),
+        Usuario.find({ _id: { $in: [actualizado.director, actualizado.ordenador, actualizado.revisor] } }, { nombre: 1, subsecretaria: 1 }).session(session).lean(),
       ]);
       let { para, cc } = resolverDestinatarios(r.notificar, actualizado, {
         admins: admins.map((a) => a._id),
-        copias: copiasPara(accion, conf.destinatariosCopia),
+        // Trámites anteriores a este campo: se toma la subsecretaría del ordenador asignado
+        copias: copiasPara(accion, conf.destinatariosCopia, {
+          subsecretaria: actualizado.subsecretaria || personas.find((x) => x._id === actualizado.ordenador)?.subsecretaria || "",
+        }),
         autor: usuario.correo,
       });
       // Las personas desactivadas no reciben correos (p. ej. un revisor que ya no está)

@@ -106,6 +106,7 @@
         <dt>Revisor</dt><dd><%= nombres[t.revisor] || t.revisor %></dd>
         <dt>Responsable de presupuesto</dt><dd><%= nombres[t.director] || t.director %></dd>
         <dt>Ordenador del gasto</dt><dd><%= nombres[t.ordenador] || t.ordenador %></dd>
+        <% if (t.subsecretaria) { %><dt>Subsecretaría</dt><dd><%= t.subsecretaria %></dd><% } %>
         <% if (t.descripcion) { %><dt>Descripción</dt><dd><%= t.descripcion %></dd><% } %>
       </dl>
     </div>

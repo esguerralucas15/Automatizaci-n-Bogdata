@@ -3,8 +3,11 @@
 //   "Registro de WF y Lote"               -> cuando el revisor registra el WF o el lote (y el reinicio con nuevo WF)
 //   "Aprobación del WF y lote nivel 1"    -> cuando el responsable de presupuesto registra su firma
 //   "Aprobación del WF y lote nivel 2"    -> cuando el ordenador del gasto registra su firma
-//   "Liberación" / "Rechazo" / "Anulación" / "Todos"
+//   "Liberación" / "Rechazo" / "Reinicio" / "Anulación" / "Todos"
 // Si menciona solo "WF" o solo "lote", se limita a esa parte del trámite.
+//
+// Columna opcional "Subsecretaría": la persona solo recibe copia de los trámites dirigidos a
+// esa subsecretaría (p. ej. quien apoya al subsecretario a firmar). Vacía = todos los trámites.
 
 const GRUPOS = {
   registro: { WF: ["REGISTRAR_WF", "REINICIAR"], LOTE: ["REGISTRAR_LOTE"] },
@@ -43,10 +46,18 @@ export function accionesDeCopia(texto) {
   if (/liberaci|liberad|programaci/.test(t)) acciones.add("REGISTRAR_LIBERACION");
   if (/rechaz|devuel/.test(t)) acciones.add("RECHAZAR");
   if (/anula/.test(t)) acciones.add("ANULAR");
+  if (/reinici/.test(t)) acciones.add("REINICIAR");
   return TODAS.filter((a) => acciones.has(a));
 }
 
-// Correos que deben ir en copia para una acción
-export function copiasPara(accion, destinatariosCopia = []) {
-  return destinatariosCopia.filter((c) => accionesDeCopia(c.recibe).includes(accion)).map((c) => c.correo);
+// "Subsecretaría de Gestión Institucional" = "gestion institucional" (sin tildes, mayúsculas ni prefijo)
+export const claveSubsecretaria = (t) => normal(t).replace(/^(la )?subsecretaria( de| del)?\s*/, "").trim();
+
+// Correos que deben ir en copia para una acción de un trámite dirigido a `subsecretaria`
+export function copiasPara(accion, destinatariosCopia = [], { subsecretaria = "" } = {}) {
+  const delTramite = claveSubsecretaria(subsecretaria);
+  return destinatariosCopia
+    .filter((c) => accionesDeCopia(c.recibe).includes(accion))
+    .filter((c) => !c.subsecretaria || claveSubsecretaria(c.subsecretaria) === delTramite)
+    .map((c) => c.correo);
 }

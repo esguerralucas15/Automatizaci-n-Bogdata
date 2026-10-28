@@ -11,6 +11,8 @@ const copiaSchema = new Schema(
     nombre: { type: String, default: "" },
     // Qué correos recibe: "Todos" o la descripción que dio el área (p. ej. "Liberación para pago")
     recibe: { type: String, default: "Todos" },
+    // Opcional: solo recibe copia de los trámites dirigidos a esta subsecretaría
+    subsecretaria: { type: String, default: "" },
   },
   { _id: false }
 );

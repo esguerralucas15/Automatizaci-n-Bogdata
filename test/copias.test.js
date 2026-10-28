@@ -41,3 +41,26 @@ test("la hoja Solo copia rechaza textos que no se entienden", () => {
   assert.equal(ok.length, 1);
   assert.match(errores[0], /fila 3: no se entiende/);
 });
+
+test("copias por subsecretaría: cada asistente solo recibe los trámites de su subsecretaría", () => {
+  const asistentes = [
+    { correo: "icamelo@sed.gov.co", recibe: "aprobación del WF y lote nivel 1, rechazos, reinicios y anulaciones", subsecretaria: "Subsecretaria de Integración Interinstitucional" },
+    { correo: "spachecor@sed.gov.co", recibe: "aprobación del WF y lote nivel 1, rechazos, reinicios y anulaciones", subsecretaria: "Subsecretaria de Calidad y Pertinencia" },
+    { correo: "revisor1@sed.gov.co", recibe: "aprobación del WF y lote nivel 2" },
+  ];
+  const deCalidad = { subsecretaria: "Subsecretaría de Calidad y pertinencia" }; // con tilde y otra mayúscula: debe coincidir
+  assert.deepEqual(copiasPara("APROBAR_WF_PRESUPUESTO", asistentes, deCalidad), ["spachecor@sed.gov.co"]);
+  assert.deepEqual(copiasPara("FIRMAR_LOTE_PRESUPUESTO", asistentes, { subsecretaria: "Integración Interinstitucional" }), ["icamelo@sed.gov.co"]);
+  assert.deepEqual(copiasPara("RECHAZAR", asistentes, deCalidad), ["spachecor@sed.gov.co"]);
+  assert.deepEqual(copiasPara("REINICIAR", asistentes, deCalidad), ["spachecor@sed.gov.co"]);
+  assert.deepEqual(copiasPara("APROBAR_WF_ORDENADOR", asistentes, deCalidad), ["revisor1@sed.gov.co"]); // sin subsecretaría = todas
+  assert.deepEqual(copiasPara("APROBAR_WF_PRESUPUESTO", asistentes, { subsecretaria: "" }), []);
+});
+
+test("la hoja Solo copia lee la columna Subsecretaría", () => {
+  const { copias } = validarCopias({
+    encabezados: ["Correo", "Nombre o área", "Qué correos debe recibir", "Subsecretaría"],
+    filas: [["jguerreroc@sed.gov.co", "Julián", "aprobación del WF y lote nivel 1", "Subsecretaria de Gestión Institucional"]],
+  });
+  assert.equal(copias[0].subsecretaria, "Subsecretaria de Gestión Institucional");
+});

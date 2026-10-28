@@ -67,6 +67,6 @@ test("hoja Solo copia", () => {
       ["malo", "X", ""],
     ],
   });
-  assert.deepEqual(copias, [{ correo: "tesoreria@sed.gov.co", nombre: "Tesorería", recibe: "Todos" }]);
+  assert.deepEqual(copias, [{ correo: "tesoreria@sed.gov.co", nombre: "Tesorería", recibe: "Todos", subsecretaria: "" }]);
   assert.match(errores[0], /fila 4/);
 });

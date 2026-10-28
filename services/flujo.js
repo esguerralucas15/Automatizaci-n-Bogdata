@@ -44,7 +44,7 @@ export const ACCIONES = {
       numRegistros: { tipo: "entero", requerido: true, etiqueta: "N.° de registros" },
       descripcion: { tipo: "texto", requerido: false, etiqueta: "Descripción" },
       director: { tipo: "correo", requerido: true, etiqueta: "Responsable de presupuesto" },
-      ordenador: { tipo: "correo", requerido: true, etiqueta: "Ordenador del gasto" },
+      ordenador: { tipo: "correo", requerido: true, etiqueta: "Ordenador del gasto (subsecretaría a la que va dirigido)" },
     },
     notificar: ["director"],
   },
