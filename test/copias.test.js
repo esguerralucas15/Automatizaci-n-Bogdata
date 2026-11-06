@@ -11,8 +11,9 @@ test("textos de la hoja de Cristian", () => {
 
 test("otros textos: liberación, rechazo, todos, solo WF, combinaciones", () => {
   assert.deepEqual(accionesDeCopia("Liberación para pago"), ["REGISTRAR_LIBERACION"]);
-  assert.deepEqual(accionesDeCopia("Rechazos y liberación"), ["REGISTRAR_LIBERACION", "RECHAZAR"]);
-  assert.equal(accionesDeCopia("Todos").length, 10);
+  assert.deepEqual(accionesDeCopia("Rechazos y liberación"), ["REGISTRAR_LIBERACION", "RECHAZAR", "RECHAZAR_LOTE"]);
+  assert.deepEqual(accionesDeCopia("Rechazos del lote"), ["RECHAZAR_LOTE"]);
+  assert.equal(accionesDeCopia("Todos").length, 11);
   assert.deepEqual(accionesDeCopia("Aprobación del WF nivel 2"), ["APROBAR_WF_ORDENADOR"]);
   assert.deepEqual(accionesDeCopia("Firma del lote nivel 1"), ["FIRMAR_LOTE_PRESUPUESTO"]);
   assert.deepEqual(accionesDeCopia("cualquier cosa"), []);
@@ -63,4 +64,30 @@ test("la hoja Solo copia lee la columna Subsecretaría", () => {
     filas: [["jguerreroc@sed.gov.co", "Julián", "aprobación del WF y lote nivel 1", "Subsecretaria de Gestión Institucional"]],
   });
   assert.equal(copias[0].subsecretaria, "Subsecretaria de Gestión Institucional");
+});
+
+test("nivel 1: el aviso va solo a la persona de apoyo; sin persona de apoyo, al subsecretario", async () => {
+  const { resolverDestinatarios } = await import("../services/destinatarios.js");
+  const { apoyosDeSubsecretaria } = await import("../services/copias.js");
+  const { destinatariosDe } = await import("../services/flujo.js");
+  const copias = [
+    { correo: "jguerreroc@sed.gov.co", recibe: "aprobación del WF y lote nivel 1, reinicios y anulaciones", subsecretaria: "Subsecretaria de Gestión Institucional" },
+    { correo: "mrubioa@sed.gov.co", recibe: "Registro de WF y Lote" },
+  ];
+  const tramite = { director: "carmona@sed.gov.co", ordenador: "ana.rosales@sed.gov.co", revisor: "rev@sed.gov.co" };
+  const claves = destinatariosDe("APROBAR_WF_PRESUPUESTO", "WF_CARGADO");
+  assert.deepEqual(claves, ["apoyoOrdenador"]);
+
+  const apoyos = apoyosDeSubsecretaria("APROBAR_WF_PRESUPUESTO", copias, { subsecretaria: "Gestión Institucional" });
+  const r = resolverDestinatarios(claves, tramite, { apoyos, copias: copiasPara("APROBAR_WF_PRESUPUESTO", copias, { subsecretaria: "Gestión Institucional" }), autor: "carmona@sed.gov.co" });
+  assert.deepEqual(r, { para: ["jguerreroc@sed.gov.co"], cc: [] }); // no le llega al subsecretario
+
+  const sinApoyo = resolverDestinatarios(claves, tramite, { apoyos: apoyosDeSubsecretaria("APROBAR_WF_PRESUPUESTO", copias, { subsecretaria: "Calidad y Pertinencia" }) });
+  assert.deepEqual(sinApoyo.para, ["ana.rosales@sed.gov.co"]);
+
+  // Las personas de apoyo ya no reciben rechazos, pero sí reinicios y anulaciones
+  assert.deepEqual(copiasPara("RECHAZAR", copias, { subsecretaria: "Gestión Institucional" }), []);
+  // El reinicio es un nuevo registro de WF: también le llega a la asistente del director
+  assert.deepEqual(copiasPara("REINICIAR", copias, { subsecretaria: "Gestión Institucional" }), ["jguerreroc@sed.gov.co", "mrubioa@sed.gov.co"]);
+  assert.deepEqual(copiasPara("ANULAR", copias, { subsecretaria: "Gestión Institucional" }), ["jguerreroc@sed.gov.co"]);
 });

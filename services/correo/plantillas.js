@@ -12,7 +12,10 @@ const pesos = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP
 
 // Asunto según el estado al que llegó el trámite
 function titulo(accion, estadoNuevo) {
-  if (accion === "RECHAZAR") return "Trámite rechazado";
+  if (accion === "RECHAZAR") return "WF rechazado: se debe reiniciar con un nuevo WF";
+  if (accion === "RECHAZAR_LOTE") {
+    return estadoNuevo === "LOTE_DEVUELTO" ? "Lote rechazado sin anulación: se debe generar un nuevo lote" : "Lote rechazado con anulación: se debe reiniciar con un nuevo WF";
+  }
   if (accion === "ANULAR") return "Trámite anulado";
   if (estadoNuevo === "LIBERADO") return "Liberado para programación de pago";
   if (estadoNuevo === "LOTE_FIRMADO") return "Lote firmado por ambos responsables";
@@ -43,13 +46,13 @@ export function armarCorreo({ tramite, evento, horaTexto, nombres = {} }) {
     ["Trámite", tramite._id],
     ["N.° de WF", tramite.wfActual],
     ["Lote", tramite.lote || "—"],
-    ["Valor total", pesos.format(tramite.valorTotal)],
+    ["N.° de plano", tramite.segmento || "—"],
     ["N.° de registros", tramite.numRegistros],
     ["Paso registrado", etiquetaAccion(evento.accion)],
     ["Registrado por", `${evento.usuario.nombre} (${evento.usuario.correo})`],
     ["Fecha y hora de registro", horaTexto],
     ...Object.entries(evento.datos ?? {})
-      .filter(([k]) => !["wf", "valorTotal", "numRegistros", "lote"].includes(k))
+      .filter(([k]) => !["wf", "segmento", "valorTotal", "numRegistros", "lote"].includes(k))
       .map(([k, v]) => [campos[k]?.etiqueta ?? k, valorLegible(campos[k], v, nombres)]),
     ...(evento.observacion ? [["Observación", evento.observacion]] : []),
   ];

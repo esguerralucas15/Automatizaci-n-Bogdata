@@ -15,12 +15,12 @@ if (!correoActivo()) {
 
 const ahora = new Date();
 const { asunto, cuerpoHtml } = armarCorreo({
-  tramite: { _id: "TR-PRUEBA-0001", wfActual: "999", lote: null, valorTotal: 1250000, numRegistros: 3, estado: "WF_CARGADO" },
+  tramite: { _id: "TR-PRUEBA-0001", wfActual: "999", lote: null, segmento: "1520", numRegistros: 3, estado: "WF_CARGADO" },
   evento: {
     accion: "REGISTRAR_WF",
     estadoNuevo: "WF_CARGADO",
     usuario: { nombre: "Correo de prueba", correo: CORREO.remitente },
-    datos: { segmento: "SE01", descripcion: "Este es un correo de prueba de la Bitácora de Pagos" },
+    datos: { segmento: "1520", descripcion: "Este es un correo de prueba de la Bitácora de Pagos" },
   },
   horaTexto: horaTexto(ahora),
 });

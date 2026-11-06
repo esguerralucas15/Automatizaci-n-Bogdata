@@ -14,7 +14,8 @@ export const ETAPAS = [
   { accion: "FIRMAR_LOTE_PRESUPUESTO", etiqueta: "Firma lote · Presupuesto", corta: "Firma lote P." },
   { accion: "FIRMAR_LOTE_ORDENADOR", etiqueta: "Firma lote · Ordenador", corta: "Firma lote O." },
   { accion: "REGISTRAR_LIBERACION", etiqueta: "Liberación", corta: "Liberación" },
-  { accion: "RECHAZAR", etiqueta: "Rechazo", corta: "Rechazo" },
+  { accion: "RECHAZAR", etiqueta: "Rechazo del WF", corta: "Rechazo WF" },
+  { accion: "RECHAZAR_LOTE", etiqueta: "Rechazo del lote", corta: "Rechazo lote" },
   { accion: "REINICIAR", etiqueta: "Reinicio con nuevo WF", corta: "Reinicio" },
   { accion: "ANULAR", etiqueta: "Anulación", corta: "Anulación" },
 ];
@@ -129,7 +130,7 @@ export function tiemposPorTramite(tramites, pasos, ahora = new Date()) {
       ...t,
       etapas,
       reinicios: lista.filter((p) => p.accion === "REINICIAR").length,
-      rechazos: lista.filter((p) => p.accion === "RECHAZAR").length,
+      rechazos: lista.filter((p) => p.accion === "RECHAZAR" || p.accion === "RECHAZAR_LOTE").length,
       totalMin: inicio ? min(inicio, fin) : null,
       abierto: !ESTADOS[t.estado]?.final,
     };

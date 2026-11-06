@@ -5,7 +5,7 @@ import { resolverDestinatarios } from "../services/destinatarios.js";
 import { ACCIONES } from "../services/flujo.js";
 
 const tramite = {
-  _id: "TR-2026-0007", wfActual: "423", lote: null, valorTotal: 1250000, numRegistros: 3,
+  _id: "TR-2026-0007", wfActual: "423", lote: null, segmento: "1520", numRegistros: 3,
   revisor: "andrea@p.gov.co", director: "ricardo@p.gov.co", ordenador: "paula@p.gov.co",
 };
 
@@ -27,7 +27,7 @@ test("correo: asunto con trámite, WF y siguiente paso; enlace al trámite", () 
     evento: {
       accion: "REGISTRAR_WF", estadoNuevo: "WF_CARGADO",
       usuario: { nombre: "Andrea Morales", correo: "andrea@p.gov.co" },
-      datos: { wf: "423", segmento: "SE01", valorTotal: 1250000, numRegistros: 3, director: "ricardo@p.gov.co", ordenador: "paula@p.gov.co" },
+      datos: { wf: "423", segmento: "1520", numRegistros: 3, director: "ricardo@p.gov.co", ordenador: "paula@p.gov.co" },
     },
     horaTexto: "domingo 25 de octubre, 9:30 a.m.",
     nombres: { "ricardo@p.gov.co": "Ricardo Peña" },
@@ -35,21 +35,22 @@ test("correo: asunto con trámite, WF y siguiente paso; enlace al trámite", () 
   assert.equal(c.asunto, "[Bitácora de Pagos] TR-2026-0007 · WF 423 – Pendiente: Firma del WF – Responsable de presupuesto");
   assert.match(c.cuerpoHtml, /\/tramites\/TR-2026-0007/);
   assert.match(c.cuerpoHtml, /Ricardo Peña \(ricardo@p\.gov\.co\)/);
-  assert.match(c.cuerpoHtml, /\$\s?1\.250\.000/);
+  assert.match(c.cuerpoHtml, /N\.° de plano<\/td><td[^>]*>1520/);
+  assert.ok(!c.cuerpoHtml.includes("Valor total"));
 });
 
 test("correo: el texto escrito por usuarios se escapa", () => {
   const c = armarCorreo({
-    tramite: { ...tramite, estado: "DEVUELTO" },
+    tramite: { ...tramite, estado: "LOTE_DEVUELTO" },
     evento: {
-      accion: "RECHAZAR", estadoNuevo: "DEVUELTO", usuario: { nombre: "Ricardo", correo: "r@p.gov.co" },
+      accion: "RECHAZAR_LOTE", estadoNuevo: "LOTE_DEVUELTO", usuario: { nombre: "Ricardo", correo: "r@p.gov.co" },
       datos: { motivo: "<script>alert(1)</script>", tipoRechazo: "sin_anulacion" },
     },
     horaTexto: "hoy",
   });
   assert.ok(!c.cuerpoHtml.includes("<script>"));
-  assert.match(c.cuerpoHtml, /Rechazo sin anulación/);
-  assert.match(c.asunto, /Trámite rechazado$/);
+  assert.match(c.cuerpoHtml, /Sin anulación: se genera un nuevo lote con el mismo WF/);
+  assert.match(c.asunto, /Lote rechazado sin anulación: se debe generar un nuevo lote$/);
   assert.equal(escapar(`a"b'c&`), "a&quot;b&#39;c&amp;");
 });
 

@@ -36,7 +36,7 @@
         <% acciones.forEach(a => { %><option value="<%= a %>" <%= filtros.accion === a ? 'selected' : '' %>><%= etiquetaAccion(a) %></option><% }) %>
       </select>
     </div>
-    <input class="campo__input buscador" name="q" value="<%= filtros.q %>" placeholder="Trámite, WF o lote" aria-label="Buscar trámite">
+    <input class="campo__input buscador" name="q" value="<%= filtros.q %>" placeholder="Trámite, WF, plano o lote" aria-label="Buscar trámite">
     <button class="btn btn--primario btn--pequeno">Filtrar</button>
   </form>
 </div>

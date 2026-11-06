@@ -34,12 +34,12 @@
       <div class="opciones">
         <% roles.forEach(r => { %>
           <label class="opcion">
-            <input type="radio" name="rol" value="<%= r %>" <%= v.rol === r ? 'checked' : '' %> <%= esUnoMismo && r !== 'admin' ? 'disabled' : '' %> required>
+            <input type="radio" name="rol" value="<%= r %>" <%= v.rol === r ? 'checked' : '' %> <%= esUnoMismo && !tieneRol(r, 'admin') ? 'disabled' : '' %> required>
             <span><%= nombreRol(r) %></span>
           </label>
         <% }) %>
       </div>
-      <% if (esUnoMismo) { %><p class="campo__ayuda">No puedes cambiar tu propio rol.</p><% } %>
+      <% if (esUnoMismo) { %><p class="campo__ayuda">No puedes quitarte el rol de administración.</p><% } %>
       <% if (err('rol')) { %><p class="campo__error"><%= err('rol') %></p><% } %>
     </fieldset>
     <div class="campo campo--ancho">

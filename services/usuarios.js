@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import Usuario from "../models/Usuario.js";
 import Tramite from "../models/Tramite.js";
 import Notificacion from "../models/Notificacion.js";
-import { ROLES, NOMBRE_ROL, CORREO } from "../models/roles.js";
+import { ROLES, NOMBRE_ROL, CORREO, tieneRol, rolesCon } from "../models/roles.js";
 import { ErrorFlujo, ESTADOS } from "./flujo.js";
 import { insertarEvento } from "./bitacora.js";
 import { armarCorreo } from "./correo/plantillas.js";
@@ -54,7 +54,7 @@ export function tipoDeCambio(actual, nuevo) {
 
 // Protege contra quedarse sin administración o dejar trámites sin firmante
 export function validarCambioSensible({ actual, rolNuevo, activoNuevo, autor, adminsActivos, asignados }) {
-  const pierdeAdmin = actual.rol === "admin" && actual.activo && (rolNuevo !== "admin" || !activoNuevo);
+  const pierdeAdmin = tieneRol(actual.rol, "admin") && actual.activo && (!tieneRol(rolNuevo, "admin") || !activoNuevo);
   if (autor?.correo === actual._id && pierdeAdmin) {
     throw new ErrorFlujo("No puedes quitarte tu propio rol de administración ni desactivarte. Pídeselo a otra persona con ese rol.");
   }
@@ -114,7 +114,7 @@ export async function actualizarUsuario({ correo, datos, autor, ip = "", agente 
     if (cambio.cambios.rol) {
       validarCambioSensible({
         actual, rolNuevo: limpios.rol, activoNuevo: actual.activo, autor,
-        adminsActivos: await Usuario.countDocuments({ rol: "admin", activo: true }).session(session),
+        adminsActivos: await Usuario.countDocuments({ rol: { $in: rolesCon("admin") }, activo: true }).session(session),
         asignados: await contarAsignados(actual, session),
       });
     }
@@ -132,7 +132,7 @@ export async function cambiarEstado({ correo, activo, autor, ip = "", agente = "
     if (!activo) {
       validarCambioSensible({
         actual, rolNuevo: actual.rol, activoNuevo: false, autor,
-        adminsActivos: await Usuario.countDocuments({ rol: "admin", activo: true }).session(session),
+        adminsActivos: await Usuario.countDocuments({ rol: { $in: rolesCon("admin") }, activo: true }).session(session),
         asignados: await contarAsignados(actual, session),
       });
     }

@@ -122,7 +122,7 @@ export async function bitacora(req, res) {
   if (filtros.accion) filtro.accion = filtros.accion;
   if (filtros.q) {
     const re = new RegExp(filtros.q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
-    const coinciden = await Tramite.find({ $or: [{ _id: re }, { wfActual: re }, { wfAnteriores: re }, { lote: re }] }, { _id: 1 }).lean();
+    const coinciden = await Tramite.find({ $or: [{ _id: re }, { wfActual: re }, { wfAnteriores: re }, { lote: re }, { segmento: re }] }, { _id: 1 }).lean();
     filtro.tramite = { $in: coinciden.map((t) => t._id) };
   }
 

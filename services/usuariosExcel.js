@@ -1,6 +1,6 @@
 // Validación de la plantilla "Plantilla_Usuarios_Bitacora.xlsx" (hojas Usuarios y Solo copia).
 // No toca la base de datos ni lee archivos: recibe filas ya leídas, así se prueba fácil.
-import { ROLES, CORREO } from "../models/roles.js";
+import { ROLES, CORREO, tieneRol } from "../models/roles.js";
 import { accionesDeCopia } from "./copias.js";
 
 // Encabezados de la plantilla -> campo
@@ -31,6 +31,8 @@ const SINONIMOS_ROL = {
   "responsable de presupuesto": "director",
   subsecretario: "subsecretario", subsecretaria: "subsecretario", "ordenador del gasto": "subsecretario",
   admin: "admin", administradora: "admin", administrador: "admin",
+  admin_revisor: "admin_revisor", "admin y revisor": "admin_revisor", "administrador y revisor": "admin_revisor",
+  "administradora y revisora": "admin_revisor", "administrador(a) y revisor(a)": "admin_revisor",
 };
 
 const texto = (v) => (v === undefined || v === null ? "" : String(v).trim());
@@ -94,7 +96,7 @@ export function validarUsuarios({ encabezados, filas, primeraFila = 2 }) {
   }
 
   if (!usuarios.length && !errores.length) errores.push("La hoja Usuarios no tiene personas");
-  if (usuarios.length && !usuarios.some((u) => u.rol === "admin" && u.activo)) {
+  if (usuarios.length && !usuarios.some((u) => tieneRol(u.rol, "admin") && u.activo)) {
     errores.push("Debe haber al menos una persona activa con rol admin");
   }
   return { usuarios, errores };

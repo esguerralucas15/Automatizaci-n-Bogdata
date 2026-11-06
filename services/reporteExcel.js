@@ -56,11 +56,11 @@ export async function libroTiempos({ periodo, ind, porTramite, pasos, nombres })
 
   const medidas = ETAPAS.slice(0, 6);
   hoja(libro, "Por trámite", [
-    ["Trámite", "id", 15], ["WF", "wf", 10], ["Lote", "lote", 14], ["Valor", "valor", 16, '"$"#,##0'], ["Estado", "estado", 26],
+    ["Trámite", "id", 15], ["WF", "wf", 10], ["N.° plano", "plano", 12], ["Lote", "lote", 14], ["Estado", "estado", 26],
     ...medidas.map((e) => [`${e.etiqueta} (h)`, e.accion, 14, "0.00"]),
     ["Rechazos", "rechazos", 10], ["Total (h)", "total", 12, "0.00"], ["Abierto", "abierto", 9],
   ], porTramite.map((t) => ({
-    id: t._id, wf: t.wfActual, lote: t.lote ?? "", valor: t.valorTotal, estado: etiquetaEstado(t.estado),
+    id: t._id, wf: t.wfActual, plano: t.segmento ?? "", lote: t.lote ?? "", estado: etiquetaEstado(t.estado),
     ...Object.fromEntries(medidas.map((e) => [e.accion, horas(t.etapas[e.accion] ?? null)])),
     rechazos: t.rechazos, total: horas(t.totalMin), abierto: t.abierto ? "Sí" : "No",
   })));

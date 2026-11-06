@@ -1,6 +1,6 @@
 // Protección de rutas según la sesión y el rol del usuario
 import { partesBogota, horaLegible, fechaLegible } from "../services/tiempo.js";
-import { inicioDe, NOMBRE_ROL } from "../models/roles.js";
+import { inicioDe, NOMBRE_ROL, tieneRol } from "../models/roles.js";
 import { etiquetaEstado } from "../services/flujo.js";
 
 export function requiereSesion(req, res, next) {
@@ -11,7 +11,7 @@ export function requiereSesion(req, res, next) {
 // soloRoles("admin") · soloRoles("revisor", "director", "subsecretario")
 export function soloRoles(...roles) {
   return (req, res, next) => {
-    if (!roles.includes(req.session.usuario?.rol)) {
+    if (!roles.some((r) => tieneRol(req.session.usuario?.rol, r))) {
       return res.status(403).render("errores/403", { titulo: "Acceso denegado" });
     }
     next();
@@ -39,6 +39,7 @@ const formato = {
     const p = partesBogota(new Date(instante));
     return `${fechaLegible(p.fecha)}, ${horaLegible(p.hora)}`;
   },
+  tieneRol,
   numero: (n) => Number(n ?? 0).toLocaleString("es-CO", { maximumFractionDigits: 1 }),
   dinero: (n) => pesos.format(Number(n ?? 0)),
   nombreRol: (rol) => NOMBRE_ROL[rol] ?? rol,

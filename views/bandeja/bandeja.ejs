@@ -4,7 +4,7 @@
     <h2 class="encabezado__titulo">Bienvenid@ <%= usuario.nombre %></h2>
     <p class="encabezado__info"><%= nombreRol(usuario.rol) %> · Trámites que esperan tu registro</p>
   </div>
-  <% if (usuario.rol === 'revisor') { %><a href="/tramites/nuevo" class="btn btn--primario btn--mediano">Nuevo trámite</a><% } %>
+  <% if (tieneRol(usuario, 'revisor')) { %><a href="/tramites/nuevo" class="btn btn--primario btn--mediano">Nuevo trámite</a><% } %>
 </div>
 
 <div class="admin-stats admin-stats--tres">

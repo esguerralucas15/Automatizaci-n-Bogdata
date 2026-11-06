@@ -13,7 +13,7 @@ const otroSubsec = { correo: "pedro@ejemplo.gov.co", nombre: "Pedro", rol: "subs
 const admin = { correo: "marta@ejemplo.gov.co", nombre: "Marta", rol: "admin" };
 
 const datosWF = {
-  wf: "423", segmento: "SE01", valorTotal: "1.250.000", numRegistros: "3",
+  wf: "423", segmento: "1520", numRegistros: "3",
   director: "Carlos@Ejemplo.gov.co", ordenador: "laura@ejemplo.gov.co",
 };
 
@@ -25,7 +25,7 @@ function paso(tramite, accion, usuario, datos = {}) {
 
 test("todas las acciones apuntan a estados que existen", () => {
   for (const [codigo, a] of Object.entries(ACCIONES)) {
-    assert.ok(ESTADOS[a.a], `${codigo} -> ${a.a}`);
+    for (const destino of typeof a.a === "function" ? a.destinos : [a.a]) assert.ok(ESTADOS[destino], `${codigo} -> ${destino}`);
     for (const d of a.desde) assert.ok(d === null || ESTADOS[d], `${codigo} desde ${d}`);
   }
 });
@@ -34,7 +34,7 @@ test("camino completo: del cargue a la liberación", () => {
   let t = paso(null, "REGISTRAR_WF", revisor, datosWF);
   assert.equal(t.estado, "WF_CARGADO");
   assert.equal(t.director, "carlos@ejemplo.gov.co"); // correo normalizado
-  assert.equal(t.valorTotal, 1250000);
+  assert.equal(t.segmento, "1520");
   assert.equal(t.numRegistros, 3);
 
   t = paso(t, "APROBAR_WF_PRESUPUESTO", director);
@@ -77,19 +77,43 @@ test("solo revisores crean trámites", () => {
   assert.throws(() => aplicarAccion({ tramite: null, accion: "REGISTRAR_WF", usuario: director, datos: datosWF }), /No te corresponde/);
 });
 
-test("rechazo, reinicio con nuevo WF y anulación", () => {
+test("rechazo del WF: siempre con anulación (no pide tipo) y se reinicia con WF nuevo", () => {
   const base = { director: director.correo, ordenador: subsec.correo };
-  const r = aplicarAccion({
-    tramite: { ...base, estado: "LOTE_FIRMADO_PRESUPUESTO" }, accion: "RECHAZAR", usuario: subsec,
-    datos: { motivo: "Valor no coincide", tipoRechazo: "con_anulacion" },
-  });
+  const r = aplicarAccion({ tramite: { ...base, estado: "WF_APROBADO_PRESUPUESTO" }, accion: "RECHAZAR", usuario: subsec, datos: { motivo: "Valor no coincide", tipoRechazo: "sin_anulacion" } });
   assert.equal(r.estadoNuevo, "DEVUELTO");
-  assert.deepEqual(r.notificar, ["revisor", "director"]); // el ordenador rechaza: avisa también al director
+  assert.deepEqual(r.datos, { motivo: "Valor no coincide" }); // el tipo no aplica al WF
+  assert.deepEqual(r.notificar, ["revisor", "director"]); // rechaza el ordenador: avisa también al director
+  assert.deepEqual(destinatariosDe("RECHAZAR", "WF_CARGADO"), ["revisor"]); // rechaza el director: solo al revisor
 
   const devuelto = { ...base, estado: "DEVUELTO" };
   assert.equal(aplicarAccion({ tramite: devuelto, accion: "REINICIAR", usuario: revisor, datos: { wf: "500" } }).estadoNuevo, "WF_CARGADO");
   assert.equal(aplicarAccion({ tramite: devuelto, accion: "ANULAR", usuario: revisor, datos: { motivo: "Duplicado" } }).estadoNuevo, "ANULADO");
-  assert.deepEqual(destinatariosDe("RECHAZAR", "WF_CARGADO"), ["revisor"]);
+});
+
+test("rechazo del lote: con anulación reinicia con WF nuevo; sin anulación pide un lote nuevo con el mismo WF", () => {
+  const base = { director: director.correo, ordenador: subsec.correo };
+  const lote = { ...base, estado: "LOTE_FIRMADO_PRESUPUESTO" };
+  assert.ok(!accionesDisponibles(lote, subsec).includes("RECHAZAR")); // en el lote se usa RECHAZAR_LOTE
+  assert.throws(() => aplicarAccion({ tramite: lote, accion: "RECHAZAR_LOTE", usuario: subsec, datos: { motivo: "x" } }), /Revisa/); // exige el tipo
+
+  const con = aplicarAccion({ tramite: lote, accion: "RECHAZAR_LOTE", usuario: subsec, datos: { motivo: "x", tipoRechazo: "con_anulacion" } });
+  assert.equal(con.estadoNuevo, "DEVUELTO");
+
+  const sin = aplicarAccion({ tramite: { ...base, estado: "LOTE_CREADO" }, accion: "RECHAZAR_LOTE", usuario: director, datos: { motivo: "x", tipoRechazo: "sin_anulacion" } });
+  assert.equal(sin.estadoNuevo, "LOTE_DEVUELTO");
+  assert.deepEqual(sin.notificar, ["revisor"]);
+
+  const devuelto = { ...base, estado: "LOTE_DEVUELTO" };
+  assert.deepEqual(accionesDisponibles(devuelto, revisor).sort(), ["ANULAR", "REGISTRAR_LOTE"]);
+  assert.equal(aplicarAccion({ tramite: devuelto, accion: "REGISTRAR_LOTE", usuario: revisor, datos: { lote: "1400" } }).estadoNuevo, "LOTE_CREADO");
+  assert.ok(!accionesDisponibles(devuelto, revisor).includes("REINICIAR")); // sin anulación no cambia el WF
+});
+
+test("rol combinado: administración y revisión", () => {
+  const manuel = { correo: "magomez@sed.gov.co", nombre: "Manuel", rol: "admin_revisor" };
+  assert.deepEqual(accionesDisponibles(null, manuel), ["REGISTRAR_WF"]);
+  assert.ok(accionesDisponibles({ estado: "WF_APROBADO", director: director.correo, ordenador: subsec.correo }, manuel).includes("REGISTRAR_LOTE"));
+  assert.deepEqual(accionesDisponibles({ estado: "WF_CARGADO", director: director.correo, ordenador: subsec.correo }, manuel), []);
 });
 
 test("no se rechaza en etapas que no son de firma", () => {
@@ -99,12 +123,11 @@ test("no se rechaza en etapas que no son de firma", () => {
 
 test("validación de datos con mensajes por campo", () => {
   try {
-    validarDatos("REGISTRAR_WF", { wf: "WF-12", valorTotal: "0", numRegistros: "2.5", director: "no-es-correo" });
+    validarDatos("REGISTRAR_WF", { wf: "WF-12", numRegistros: "2.5", director: "no-es-correo" });
     assert.fail("debía fallar");
   } catch (e) {
     assert.ok(e instanceof ErrorFlujo);
     assert.match(e.errores.wf, /solo dígitos/);
-    assert.match(e.errores.valorTotal, /mayor que cero/);
     assert.match(e.errores.numRegistros, /entero/);
     assert.match(e.errores.director, /Correo/);
     assert.match(e.errores.segmento, /obligatorio/);
@@ -128,4 +151,8 @@ test("aDinero entiende el formato colombiano", () => {
   assert.equal(aDinero("1500000"), 1500000);
   assert.equal(aDinero("2500.5"), 2500.5);
   assert.ok(Number.isNaN(aDinero("abc")));
+});
+
+test("el registro del WF ya no pide valor total", () => {
+  assert.ok(!("valorTotal" in validarDatos("REGISTRAR_WF", { ...datosWF, valorTotal: "999" })));
 });

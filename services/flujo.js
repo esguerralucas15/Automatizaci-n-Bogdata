@@ -1,3 +1,5 @@
+import { tieneRol } from "../models/roles.js";
+
 // Máquina de estados del trámite: ÚNICA fuente de verdad del proceso.
 // Define estados, acciones, quién puede ejecutarlas, qué datos piden y a quién
 // se notifica. No toca la base de datos: así se prueba sin MongoDB.
@@ -19,18 +21,27 @@ export const ESTADOS = {
   LOTE_FIRMADO_PRESUPUESTO: { etiqueta: "Lote firmado por Presupuesto", espera: "Firma del lote – Ordenador del gasto", responsable: "ordenador", etapa: 5 },
   LOTE_FIRMADO: { etiqueta: "Lote firmado", espera: "Confirmación de liberación", responsable: "revisor", etapa: 6 },
   LIBERADO: { etiqueta: "Liberado para pago", espera: null, responsable: null, etapa: 7, final: true },
-  DEVUELTO: { etiqueta: "Devuelto", espera: "Reinicio o anulación (equipo revisor)", responsable: "revisor", etapa: 0 },
+  DEVUELTO: { etiqueta: "Devuelto", espera: "Reinicio con nuevo WF o anulación (equipo revisor)", responsable: "revisor", etapa: 0 },
+  // Lote rechazado sin anulación: se conserva el WF y el revisor genera un lote nuevo
+  LOTE_DEVUELTO: { etiqueta: "Lote devuelto", espera: "Generación de un nuevo lote (mismo WF)", responsable: "revisor", etapa: 3 },
   ANULADO: { etiqueta: "Anulado", espera: null, responsable: null, etapa: 0, final: true },
 };
 
 // Rol que debe tener la persona según el campo responsable
 const ROL_DE_RESPONSABLE = { revisor: "revisor", director: "director", ordenador: "subsecretario" };
 
-const ETAPAS_DE_FIRMA = ["WF_CARGADO", "WF_APROBADO_PRESUPUESTO", "LOTE_CREADO", "LOTE_FIRMADO_PRESUPUESTO"];
+// Rechazo del WF: siempre con anulación (se reinicia con un WF nuevo).
+// Rechazo del lote: con anulación (nuevo WF) o sin anulación (nuevo lote, mismo WF).
+const FIRMAS_DEL_WF = ["WF_CARGADO", "WF_APROBADO_PRESUPUESTO"];
+const FIRMAS_DEL_LOTE = ["LOTE_CREADO", "LOTE_FIRMADO_PRESUPUESTO"];
+// Al revisor, y al director si quien rechaza es el ordenador (niveles anteriores)
+const avisoDeRechazo = (estado) => (ESTADOS[estado].responsable === "ordenador" ? ["revisor", "director"] : ["revisor"]);
 
 // Tipos de campo: texto, numeroWF, dinero, entero, correo, booleano, lista, opcion
 // "notificar": claves que el servicio de correo convierte en direcciones:
 //   director | ordenador | revisor (quien creó el trámite) | admin
+//   apoyoOrdenador: la persona que apoya al subsecretario a firmar (hoja "Solo copia" con su
+//   subsecretaría); si la subsecretaría no tiene persona de apoyo, el aviso va al subsecretario
 // Además, cada acción lleva en copia a quien la hoja "Solo copia" indique (services/copias.js).
 export const ACCIONES = {
   REGISTRAR_WF: {
@@ -39,8 +50,8 @@ export const ACCIONES = {
     a: "WF_CARGADO",
     campos: {
       wf: { tipo: "numeroWF", requerido: true, etiqueta: "N.° de WF" },
-      segmento: { tipo: "texto", requerido: true, etiqueta: "Segmento" },
-      valorTotal: { tipo: "dinero", requerido: true, etiqueta: "Valor total" },
+      // Internamente se llama "segmento"; el área lo conoce como N.° de plano
+      segmento: { tipo: "texto", requerido: true, etiqueta: "N.° de plano" },
       numRegistros: { tipo: "entero", requerido: true, etiqueta: "N.° de registros" },
       descripcion: { tipo: "texto", requerido: false, etiqueta: "Descripción" },
       director: { tipo: "correo", requerido: true, etiqueta: "Responsable de presupuesto" },
@@ -53,7 +64,7 @@ export const ACCIONES = {
     desde: ["WF_CARGADO"],
     a: "WF_APROBADO_PRESUPUESTO",
     campos: {},
-    notificar: ["ordenador"],
+    notificar: ["apoyoOrdenador"],
   },
   APROBAR_WF_ORDENADOR: {
     etiqueta: "Registrar firma del WF (Ordenador del gasto)",
@@ -64,11 +75,11 @@ export const ACCIONES = {
   },
   REGISTRAR_LOTE: {
     etiqueta: "Registrar lote",
-    desde: ["WF_APROBADO"],
+    desde: ["WF_APROBADO", "LOTE_DEVUELTO"],
     a: "LOTE_CREADO",
     campos: {
       lote: { tipo: "numeroLote", requerido: true, etiqueta: "N.° de lote" },
-      documentosContables: { tipo: "lista", formato: "documentoContable", requerido: true, etiqueta: "Documentos contables" },
+      documentosContables: { tipo: "lista", formato: "documentoContable", requerido: false, etiqueta: "Documentos contables" },
     },
     notificar: ["director"],
   },
@@ -77,7 +88,7 @@ export const ACCIONES = {
     desde: ["LOTE_CREADO"],
     a: "LOTE_FIRMADO_PRESUPUESTO",
     campos: {},
-    notificar: ["ordenador"],
+    notificar: ["apoyoOrdenador"],
   },
   FIRMAR_LOTE_ORDENADOR: {
     etiqueta: "Registrar firma del lote (Ordenador del gasto)",
@@ -96,20 +107,33 @@ export const ACCIONES = {
     notificar: ["admin"],
   },
   RECHAZAR: {
-    etiqueta: "Registrar rechazo",
-    desde: ETAPAS_DE_FIRMA,
+    etiqueta: "Registrar rechazo del WF",
+    desde: FIRMAS_DEL_WF,
     a: "DEVUELTO",
+    campos: {
+      motivo: { tipo: "texto", requerido: true, etiqueta: "Motivo del rechazo" },
+    },
+    notificar: avisoDeRechazo,
+  },
+  RECHAZAR_LOTE: {
+    etiqueta: "Registrar rechazo del lote",
+    desde: FIRMAS_DEL_LOTE,
+    // El estado nuevo depende del tipo de rechazo
+    a: (datos) => (datos.tipoRechazo === "sin_anulacion" ? "LOTE_DEVUELTO" : "DEVUELTO"),
+    destinos: ["LOTE_DEVUELTO", "DEVUELTO"],
     campos: {
       motivo: { tipo: "texto", requerido: true, etiqueta: "Motivo del rechazo" },
       tipoRechazo: {
         tipo: "opcion",
         requerido: true,
         etiqueta: "Tipo de rechazo",
-        opciones: { sin_anulacion: "Rechazo sin anulación", con_anulacion: "Rechazo con anulación" },
+        opciones: {
+          sin_anulacion: "Sin anulación: se genera un nuevo lote con el mismo WF",
+          con_anulacion: "Con anulación: se reinicia con un nuevo WF",
+        },
       },
     },
-    // Al revisor, y al director si quien rechaza es el ordenador (niveles anteriores)
-    notificar: (estado) => (ESTADOS[estado].responsable === "ordenador" ? ["revisor", "director"] : ["revisor"]),
+    notificar: avisoDeRechazo,
   },
   REINICIAR: {
     etiqueta: "Reiniciar con nuevo WF",
@@ -122,7 +146,7 @@ export const ACCIONES = {
   },
   ANULAR: {
     etiqueta: "Anular trámite",
-    desde: ["DEVUELTO"],
+    desde: ["DEVUELTO", "LOTE_DEVUELTO"],
     a: "ANULADO",
     campos: {
       motivo: { tipo: "texto", requerido: true, etiqueta: "Motivo de la anulación" },
@@ -147,7 +171,7 @@ export class ErrorFlujo extends Error {
 export function esResponsable(tramite, usuario) {
   const campo = ESTADOS[tramite.estado]?.responsable;
   if (!campo || !usuario) return false;
-  if (usuario.rol !== ROL_DE_RESPONSABLE[campo]) return false;
+  if (!tieneRol(usuario, ROL_DE_RESPONSABLE[campo])) return false;
   if (campo === "revisor") return true; // cualquier revisor puede continuar
   return tramite[campo] === usuario.correo;
 }
@@ -156,7 +180,7 @@ export function esResponsable(tramite, usuario) {
 // (sin trámite: solo REGISTRAR_WF para revisores)
 export function accionesDisponibles(tramite, usuario) {
   if (!usuario) return [];
-  if (!tramite) return usuario.rol === "revisor" ? ["REGISTRAR_WF"] : [];
+  if (!tramite) return tieneRol(usuario, "revisor") ? ["REGISTRAR_WF"] : [];
   if (!esResponsable(tramite, usuario)) return [];
   return Object.entries(ACCIONES)
     .filter(([, a]) => a.desde.includes(tramite.estado))
@@ -293,7 +317,7 @@ export function aplicarAccion({ tramite, accion, usuario, datos }) {
   const limpios = validarDatos(accion, datos);
   return {
     estadoAnterior,
-    estadoNuevo: def.a,
+    estadoNuevo: typeof def.a === "function" ? def.a(limpios) : def.a,
     datos: limpios,
     notificar: destinatariosDe(accion, estadoAnterior),
   };

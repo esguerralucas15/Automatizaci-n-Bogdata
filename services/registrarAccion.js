@@ -4,13 +4,14 @@
 import mongoose from "mongoose";
 import Tramite from "../models/Tramite.js";
 import Usuario from "../models/Usuario.js";
+import { rolesCon } from "../models/roles.js";
 import Notificacion from "../models/Notificacion.js";
 import Contador from "../models/Contador.js";
 import Configuracion from "../models/Configuracion.js";
 import { aplicarAccion, ErrorFlujo } from "./flujo.js";
 import { insertarEvento } from "./bitacora.js";
 import { resolverDestinatarios } from "./destinatarios.js";
-import { copiasPara } from "./copias.js";
+import { copiasPara, apoyosDeSubsecretaria } from "./copias.js";
 import { armarCorreo } from "./correo/plantillas.js";
 import { ahora, aFechaHora, partesBogota, fechaLegible, horaLegible } from "./tiempo.js";
 
@@ -68,7 +69,12 @@ async function validarWfLibre(wf, session, excepto = null) {
 function cambiosDelTramite(accion, datos, tramite) {
   switch (accion) {
     case "REGISTRAR_LOTE":
-      return { lote: datos.lote, documentosContables: datos.documentosContables };
+      // Si había un lote (rechazado sin anulación), queda en el historial
+      return {
+        lote: datos.lote,
+        documentosContables: datos.documentosContables ?? [],
+        ...(tramite.lote ? { lotesAnteriores: [...(tramite.lotesAnteriores ?? []), tramite.lote] } : {}),
+      };
     case "REGISTRAR_LIBERACION":
       return { avisoEmbargos: datos.avisoEmbargos };
     case "REINICIAR":
@@ -77,6 +83,7 @@ function cambiosDelTramite(accion, datos, tramite) {
         wfActual: datos.wf,
         wfAnteriores: [...tramite.wfAnteriores, tramite.wfActual],
         lote: null,
+        ...(tramite.lote ? { lotesAnteriores: [...(tramite.lotesAnteriores ?? []), tramite.lote] } : {}),
         documentosContables: [],
         avisoEmbargos: null,
       };
@@ -108,6 +115,11 @@ export async function registrarAccion({ tramiteId = null, accion, usuario, datos
         const n = await Contador.siguiente(`tramites-${anio}`, session);
         id = `TR-${anio}-${String(n).padStart(4, "0")}`;
       }
+      if (accion === "REGISTRAR_LOTE" && tramite.lote) {
+        if (r.datos.lote === tramite.lote || (tramite.lotesAnteriores ?? []).includes(r.datos.lote)) {
+          throw new ErrorFlujo("Revisa los datos marcados", { lote: `El nuevo lote debe ser distinto al rechazado (${tramite.lote})` });
+        }
+      }
       if (accion === "REINICIAR") {
         if (r.datos.wf === tramite.wfActual || tramite.wfAnteriores.includes(r.datos.wf)) {
           throw new ErrorFlujo("Revisa los datos marcados", { wf: "El reinicio necesita un WF nuevo" });
@@ -138,7 +150,6 @@ export async function registrarAccion({ tramiteId = null, accion, usuario, datos
             _id: id,
             wfActual: r.datos.wf,
             segmento: r.datos.segmento,
-            valorTotal: r.datos.valorTotal,
             numRegistros: r.datos.numRegistros,
             descripcion: r.datos.descripcion ?? "",
             estado: r.estadoNuevo,
@@ -163,16 +174,16 @@ export async function registrarAccion({ tramiteId = null, accion, usuario, datos
 
       // Correo en cola (outbox)
       const [admins, conf, personas] = await Promise.all([
-        Usuario.find({ rol: "admin", activo: true }, { _id: 1 }).session(session).lean(),
+        Usuario.find({ rol: { $in: rolesCon("admin") }, activo: true }, { _id: 1 }).session(session).lean(),
         Configuracion.actual(),
         Usuario.find({ _id: { $in: [actualizado.director, actualizado.ordenador, actualizado.revisor] } }, { nombre: 1, subsecretaria: 1 }).session(session).lean(),
       ]);
+      // Trámites anteriores a este campo: se toma la subsecretaría del ordenador asignado
+      const subsecretaria = actualizado.subsecretaria || personas.find((x) => x._id === actualizado.ordenador)?.subsecretaria || "";
       let { para, cc } = resolverDestinatarios(r.notificar, actualizado, {
         admins: admins.map((a) => a._id),
-        // Trámites anteriores a este campo: se toma la subsecretaría del ordenador asignado
-        copias: copiasPara(accion, conf.destinatariosCopia, {
-          subsecretaria: actualizado.subsecretaria || personas.find((x) => x._id === actualizado.ordenador)?.subsecretaria || "",
-        }),
+        copias: copiasPara(accion, conf.destinatariosCopia, { subsecretaria }),
+        apoyos: apoyosDeSubsecretaria(accion, conf.destinatariosCopia, { subsecretaria }),
         autor: usuario.correo,
       });
       // Las personas desactivadas no reciben correos (p. ej. un revisor que ya no está)

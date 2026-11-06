@@ -1,7 +1,11 @@
 <%
-  const enlaces = usuario.rol === 'admin'
+  const enlaces = tieneRol(usuario, 'admin')
     ? [
         { href: '/admin/dashboard', texto: 'Dashboard', icono: 'casa' },
+        ...(tieneRol(usuario, 'revisor') ? [
+          { href: '/bandeja', texto: 'Mi bandeja', icono: 'bandeja' },
+          { href: '/tramites/nuevo', texto: 'Nuevo trámite', icono: 'mas' },
+        ] : []),
         { href: '/tramites', texto: 'Trámites', icono: 'lista', exacta: true },
         { href: '/admin/tiempos', texto: 'Tiempos de respuesta', icono: 'reloj' },
         { href: '/admin/bitacora', texto: 'Bitácora', icono: 'escudo' },
@@ -9,7 +13,7 @@
       ]
     : [
         { href: '/bandeja', texto: 'Mi bandeja', icono: 'bandeja' },
-        ...(usuario.rol === 'revisor' ? [{ href: '/tramites/nuevo', texto: 'Nuevo trámite', icono: 'mas' }] : []),
+        ...(tieneRol(usuario, 'revisor') ? [{ href: '/tramites/nuevo', texto: 'Nuevo trámite', icono: 'mas' }] : []),
         { href: '/tramites', texto: 'Trámites', icono: 'lista', exacta: true },
       ];
   const actual = rutaActual;

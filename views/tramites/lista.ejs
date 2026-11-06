@@ -4,7 +4,7 @@
     <h2 class="encabezado__titulo">Trámites</h2>
     <p class="encabezado__info">Todos los trámites registrados en la bitácora</p>
   </div>
-  <% if (usuario.rol === 'revisor') { %><a href="/tramites/nuevo" class="btn btn--primario btn--mediano">Nuevo trámite</a><% } %>
+  <% if (tieneRol(usuario, 'revisor')) { %><a href="/tramites/nuevo" class="btn btn--primario btn--mediano">Nuevo trámite</a><% } %>
 </div>
 
 <div class="card tabla-card">
@@ -19,7 +19,7 @@
       </select>
     </div>
     <label for="q" class="filtro__label">Buscar</label>
-    <input class="campo__input buscador" id="q" name="q" value="<%= filtros.q %>" placeholder="Trámite, WF, lote o documento">
+    <input class="campo__input buscador" id="q" name="q" value="<%= filtros.q %>" placeholder="Trámite, WF, plano, lote o documento">
     <button class="btn btn--primario btn--pequeno">Buscar</button>
   </form>
   <%- include('../partials/tablaTramites', { tramites }) %>

@@ -10,11 +10,14 @@ const tramiteSchema = new Schema(
     _id: { type: String, required: true }, // TR-2026-0001
     wfActual: { type: String, required: true },
     wfAnteriores: { type: [String], default: [] },
-    segmento: { type: String, required: true },
-    valorTotal: { type: Number, required: true, min: 0 },
+    segmento: { type: String, required: true }, // N.° de plano
+    // Ya no se pide (un trámite puede tener varias cuentas); se conserva en trámites antiguos
+    valorTotal: { type: Number, default: null, min: 0 },
     numRegistros: { type: Number, required: true, min: 1 },
     descripcion: { type: String, default: "" },
     lote: { type: String, default: null },
+    // Lotes rechazados sin anulación (mismo WF) o de antes de un reinicio
+    lotesAnteriores: { type: [String], default: [] },
     documentosContables: { type: [String], default: [] },
     avisoEmbargos: { type: Boolean, default: null },
     estado: { type: String, enum: Object.keys(ESTADOS), required: true },

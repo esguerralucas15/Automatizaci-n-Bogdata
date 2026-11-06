@@ -8,7 +8,8 @@ test("lee el Excel de prueba (plantilla con notas en los encabezados)", async ()
   const u = validarUsuarios(leerHoja(libro, "Usuarios"));
   const c = validarCopias(leerHoja(libro, "Solo copia"));
   assert.deepEqual(u.errores, []);
-  assert.equal(u.usuarios.length, 8);
+  assert.equal(u.usuarios.length, 9);
+  assert.equal(u.usuarios.find((x) => x._id === "admin.revisor@prueba.gov.co").rol, "admin_revisor");
   assert.equal(u.usuarios.filter((x) => x.rol === "subsecretario").length, 3);
   assert.deepEqual(c.errores, []);
   assert.deepEqual(c.copias[0], { correo: "tesoreria@prueba.gov.co", nombre: "Tesorería", recibe: "Liberación para pago", subsecretaria: "" });

@@ -1,10 +1,11 @@
 <%- include('../partials/layout-inicio') %>
 <%
   const PASOS = ['Cargue del WF', 'Firma WF · Presupuesto', 'Firma WF · Ordenador', 'Lote', 'Firma lote · Presupuesto', 'Firma lote · Ordenador', 'Liberado'];
-  const hechos = { WF_CARGADO: 1, WF_APROBADO_PRESUPUESTO: 2, WF_APROBADO: 3, LOTE_CREADO: 4, LOTE_FIRMADO_PRESUPUESTO: 5, LOTE_FIRMADO: 6, LIBERADO: 7 }[t.estado];
+  const hechos = { WF_CARGADO: 1, WF_APROBADO_PRESUPUESTO: 2, WF_APROBADO: 3, LOTE_CREADO: 4, LOTE_FIRMADO_PRESUPUESTO: 5, LOTE_FIRMADO: 6, LIBERADO: 7, LOTE_DEVUELTO: 3 }[t.estado];
   const url = '/tramites/' + t._id + '/acciones';
-  const principales = disponibles.filter(a => !['RECHAZAR', 'ANULAR'].includes(a.codigo));
-  const secundarias = disponibles.filter(a => ['RECHAZAR', 'ANULAR'].includes(a.codigo));
+  const SECUNDARIAS = ['RECHAZAR', 'RECHAZAR_LOTE', 'ANULAR'];
+  const principales = disponibles.filter(a => !SECUNDARIAS.includes(a.codigo));
+  const secundarias = disponibles.filter(a => SECUNDARIAS.includes(a.codigo));
   const valoresDe = (codigo) => accionConError === codigo ? valores : { horaDeclarada: valores.horaDeclarada };
   const erroresDe = (codigo) => accionConError === codigo ? errores : {};
   const minutos = (m) => Math.abs(m) < 60 ? `${Math.abs(m)} min` : `${(Math.round(Math.abs(m) / 6) / 10).toLocaleString('es-CO')} h`;
@@ -12,7 +13,7 @@
 <div class="encabezado">
   <div>
     <h2 class="encabezado__titulo"><%= t._id %></h2>
-    <p class="encabezado__info">WF <%= t.wfActual %><% if (t.wfAnteriores.length) { %> (antes <%= t.wfAnteriores.join(', ') %>)<% } %> · Segmento <%= t.segmento %></p>
+    <p class="encabezado__info">WF <%= t.wfActual %><% if (t.wfAnteriores.length) { %> (antes <%= t.wfAnteriores.join(', ') %>)<% } %><% if (t.lote) { %> · Lote <%= t.lote %><% if ((t.lotesAnteriores || []).length) { %> (antes <%= t.lotesAnteriores.join(', ') %>)<% } %><% } %> · N.° de plano <%= t.segmento %></p>
   </div>
   <span class="estado estado--grande estado--<%= t.estado.toLowerCase() %>"><%= etiquetaEstado(t.estado) %></span>
 </div>
@@ -21,7 +22,8 @@
 <% if (ultimoRechazo) { %>
   <div class="alerta">
     <strong>Rechazado</strong> por <%= ultimoRechazo.usuario.nombre %> el <%= fechaHoraDe(ultimoRechazo.registradoEn) %>:
-    <%= ultimoRechazo.datos.motivo %>. Debe reiniciarse con un nuevo WF o anularse.
+    <%= ultimoRechazo.datos.motivo %>.
+    <%= t.estado === 'LOTE_DEVUELTO' ? 'Rechazo sin anulación: el revisor debe generar un nuevo lote con el mismo WF.' : 'Debe reiniciarse con un nuevo WF o anularse.' %>
   </div>
 <% } %>
 
@@ -98,7 +100,6 @@
     <div class="card">
       <p class="card__titulo">Datos del trámite</p>
       <dl class="datos">
-        <dt>Valor total</dt><dd><%= dinero(t.valorTotal) %></dd>
         <dt>N.° de registros</dt><dd><%= t.numRegistros %></dd>
         <dt>Lote</dt><dd><%= t.lote || '—' %></dd>
         <dt>Documentos contables</dt><dd><%= t.documentosContables.length ? t.documentosContables.join(', ') : '—' %></dd>

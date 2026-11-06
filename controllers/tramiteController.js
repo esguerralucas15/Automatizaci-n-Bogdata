@@ -150,7 +150,9 @@ async function verDetalle(req, res, { errores = {}, valores = {}, accionConError
   });
 
   const disponibles = accionesDisponibles(tramite, req.session.usuario).map((codigo) => ({ codigo, ...ACCIONES[codigo] }));
-  const ultimoRechazo = tramite.estado === "DEVUELTO" ? [...eventos].reverse().find((e) => e.accion === "RECHAZAR") : null;
+  const ultimoRechazo = ["DEVUELTO", "LOTE_DEVUELTO"].includes(tramite.estado)
+    ? [...eventos].reverse().find((e) => e.accion === "RECHAZAR" || e.accion === "RECHAZAR_LOTE")
+    : null;
 
   res.status(status).render("tramites/detalle", {
     titulo: tramite._id,

@@ -1,4 +1,5 @@
 import Tramite from "../models/Tramite.js";
+import { tieneRol } from "../models/roles.js";
 import { ESTADOS, esResponsable } from "../services/flujo.js";
 import { conEspera, esperaDe } from "./tramiteController.js";
 
@@ -12,7 +13,9 @@ const ESTADOS_POR_ROL = Object.entries(ESTADOS).reduce((acc, [estado, e]) => {
 // Trámites que esperan una acción de la persona que inició sesión
 export async function bandeja(req, res) {
   const u = req.session.usuario;
-  const filtro = { estado: { $in: ESTADOS_POR_ROL[u.rol] ?? [] } };
+  // Estados donde puede actuar (un rol combinado suma los de cada permiso)
+  const estados = Object.entries(ESTADOS_POR_ROL).filter(([rol]) => tieneRol(u, rol)).flatMap(([, e]) => e);
+  const filtro = { estado: { $in: estados } };
   if (u.rol === "director") filtro.director = u.correo;
   if (u.rol === "subsecretario") filtro.ordenador = u.correo;
 

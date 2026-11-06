@@ -16,14 +16,14 @@ const GRUPOS = {
 };
 const TODAS = [
   "REGISTRAR_WF", "APROBAR_WF_PRESUPUESTO", "APROBAR_WF_ORDENADOR", "REGISTRAR_LOTE",
-  "FIRMAR_LOTE_PRESUPUESTO", "FIRMAR_LOTE_ORDENADOR", "REGISTRAR_LIBERACION", "RECHAZAR", "REINICIAR", "ANULAR",
+  "FIRMAR_LOTE_PRESUPUESTO", "FIRMAR_LOTE_ORDENADOR", "REGISTRAR_LIBERACION", "RECHAZAR", "RECHAZAR_LOTE", "REINICIAR", "ANULAR",
 ];
 
 export const ETIQUETA_ETAPA = {
   REGISTRAR_WF: "Registro del WF", REINICIAR: "Reinicio con nuevo WF", REGISTRAR_LOTE: "Registro del lote",
   APROBAR_WF_PRESUPUESTO: "Firma WF nivel 1", FIRMAR_LOTE_PRESUPUESTO: "Firma lote nivel 1",
   APROBAR_WF_ORDENADOR: "Firma WF nivel 2", FIRMAR_LOTE_ORDENADOR: "Firma lote nivel 2",
-  REGISTRAR_LIBERACION: "Liberación", RECHAZAR: "Rechazo", ANULAR: "Anulación",
+  REGISTRAR_LIBERACION: "Liberación", RECHAZAR: "Rechazo del WF", RECHAZAR_LOTE: "Rechazo del lote", ANULAR: "Anulación",
 };
 
 const normal = (t) => String(t ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim();
@@ -44,7 +44,10 @@ export function accionesDeCopia(texto) {
   if (/nivel ?(2|dos)\b|ordenador|segund/.test(t)) agregar("nivel2");
   if (/registr|cargue|carga|generaci/.test(t)) agregar("registro");
   if (/liberaci|liberad|programaci/.test(t)) acciones.add("REGISTRAR_LIBERACION");
-  if (/rechaz|devuel/.test(t)) acciones.add("RECHAZAR");
+  if (/rechaz|devuel/.test(t)) {
+    if (partes.includes("WF")) acciones.add("RECHAZAR");
+    if (partes.includes("LOTE")) acciones.add("RECHAZAR_LOTE");
+  }
   if (/anula/.test(t)) acciones.add("ANULAR");
   if (/reinici/.test(t)) acciones.add("REINICIAR");
   return TODAS.filter((a) => acciones.has(a));
@@ -52,6 +55,17 @@ export function accionesDeCopia(texto) {
 
 // "Subsecretaría de Gestión Institucional" = "gestion institucional" (sin tildes, mayúsculas ni prefijo)
 export const claveSubsecretaria = (t) => normal(t).replace(/^(la )?subsecretaria( de| del)?\s*/, "").trim();
+
+// Personas de apoyo de la subsecretaría del trámite para esta acción (solo las que tienen
+// subsecretaría en la hoja "Solo copia"). Reciben el aviso de nivel 1 EN LUGAR del subsecretario.
+export function apoyosDeSubsecretaria(accion, destinatariosCopia = [], { subsecretaria = "" } = {}) {
+  const delTramite = claveSubsecretaria(subsecretaria);
+  if (!delTramite) return [];
+  return destinatariosCopia
+    .filter((c) => c.subsecretaria && claveSubsecretaria(c.subsecretaria) === delTramite)
+    .filter((c) => accionesDeCopia(c.recibe).includes(accion))
+    .map((c) => c.correo);
+}
 
 // Correos que deben ir en copia para una acción de un trámite dirigido a `subsecretaria`
 export function copiasPara(accion, destinatariosCopia = [], { subsecretaria = "" } = {}) {
